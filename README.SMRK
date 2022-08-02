@@ -1,0 +1,90 @@
+
+https://docs.zephyrproject.org/latest/develop/getting_started/index.html
+
+mkdir Zephyr
+cd Zephyr
+west init `pwd`
+west update
+west zephyr-export
+pip3 install --user -r zephyr/scripts/requirements.txt
+
+cd ~
+wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/zephyr-sdk-0.14.2_linux-x86_64.tar.gz
+wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/sha256.sum | shasum --check --ignore-missing
+tar xvf zephyr-sdk-0.14.2_linux-x86_64.tar.gz
+(I used /opt)
+cd /opt/zephyr-sdk-0.14.2
+./setup.sh
+sudo cp ~/zephyr-sdk-0.14.2/sysroots/x86_64-pokysdk-linux/usr/share/openocd/contrib/60-openocd.rules /etc/udev/rules.d
+sudo udevadm control --reload
+
+# Now update to our tree.
+mv zephyr zephyr-orig
+
+git clone git@gitlab.com:ronmelvin/zephyr.git
+cd zephyr
+west build --pristine -b smrk100g MyWork/shell_module
+west flash
+west debug
+
+
+MCUBOOT
+git clone https://github.com/mcu-tools/mcuboot.git
+cd mcuboot/
+pip3 install --user -r scripts/requirements.txt
+
+This install bootloader in part0
+cd boot/zephyr
+mkdir build && cd build
+cmake -GNinja -DBOARD=smrk100g ..
+west flash
+
+(~/Work/Xilinx/STM/Zephyr-mcuboot/mcuboot/boot/zephyr/build/zephyr)
+cd zephyr
+
+cmake -DFROM_WHO=shell -G"Ninja" -DBOARD=smrk100g ../../../../../zephyr/MyWork/shell_mcuboot
+ninja
+../../../../scripts/imgtool.py sign --key ../../../../root-rsa-2048.pem   --header-size 0x200 --align  8 --version 1.2 --slot-size 0x20000 ./zephyr/zephyr.bin  signed-shell.bin
+bin2hex.py  --offset 0x08020000 signed-shell.bin signed-shell.hex
+cp signed-shell.hex zephyr/zephyr.hex 
+west flash
+
+
+MCUBOOT serial update:
+go get github.com/apache/mynewt-mcumgr-cli/mcumgr
+
+
+
+MCUBOOT V2.
+
+
+mkdir Zephyr-mcuboot2
+cd Zephyr-mcuboot2
+west init /home/ron/Work/Xilinx/STM/Zephyr-mcuboot2
+west update
+
+# Get our copy of Zephyr
+mv zephyr zephyr-ORIG
+git clone git@github.com:ron-smrk/zephyr.git
+
+
+
+cd zephyr
+Generate key (1 time):
+../bootloader/mcuboot/scripts/imgtool.py keygen -k smrk-key.pem -t rsa-2048
+cp smrk-key.pem ../bootloader/mcuboot/
+west build -b smrk100g -t menuconfig -d build_mcuboot ../bootloader/mcuboot/boot/zephyr
+ - / BOOT_SIGNATURE_KEY_FILE (search for...)
+ - change to smrk-key.pem
+
+
+# build and install mcuboot
+west build -b smrk100g -d build_mcuboot ../bootloader/mcuboot/boot/zephyr
+west flash -d build_mcuboot
+
+#build app.
+west build -p -b smrk100g samples/subsys/mgmt/mcumgr/smp_svr -- -DOVERLAY_CONFIG='overlay-serial.conf;overlay-fs.conf;overlay-shell-mgmt.conf'
+west sign -t imgtool -- --key smrk-key.pem
+west flash --bin-file build/zephyr/zephyr.signed.bin
+
+

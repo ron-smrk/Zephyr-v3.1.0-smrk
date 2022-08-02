@@ -1,0 +1,8 @@
+# SMRK100G board configuration
+
+# Copyright (c) 2017 Fenix Engineering Solutions
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_SMRK100G
+	bool "SMRK100G Development Board"
+	depends on SOC_STM32F411XE

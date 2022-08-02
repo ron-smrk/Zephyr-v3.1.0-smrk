@@ -1,0 +1,11 @@
+# SMRK100G board configuration
+
+# Copyright (c) 2017 Fenix Engineering Solutions
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_SMRK100G
+
+config BOARD
+	default "smrk100g"
+
+endif # BOARD_SMRK100G
