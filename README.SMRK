@@ -88,3 +88,22 @@ west sign -t imgtool -- --key smrk-key.pem
 west flash --bin-file build/zephyr/zephyr.signed.bin
 
 
+Ver 3.0 (using tarfile)
+
+mkdir Zephy
+cd Zephy
+unzip ../zephyr-zephyr-v3.1.0.zip
+west init -l zephyr-zephyr-v3.1.0
+west update
+
+
+# From git:
+
+
+mkdir Zephy
+cd Zephy
+git clone git@github.com:ron-smrk/Zephyr-v3.1.0-smrk.git
+west init -l Zephyr-v3.1.0-smrk
+west update
+
+
