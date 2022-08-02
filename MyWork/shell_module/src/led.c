@@ -19,8 +19,8 @@ struct lmap {
 	int  gpin; /* green */
 	unsigned char mask; /* mask bits */
 } ledmap[] = {
-	{"d8", 3, 2, 0xfc},
-	{"d9", 1, 0, 0xf3},
+	{"d8", 3, 2, 0x0c},
+	{"d9", 1, 0, 0x03},
 	/* {"d10", 1, 0, 0xfc}, */
 	/* {"d11", 6, 7, 0x3f}, */
 	{0, 0, 0, 0}
@@ -38,7 +38,8 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 	char gval = 0, tmp;
 	unsigned char mask = 0;
 	int all = 0;
-	char gall = 0, yall = 0, amask = 0;
+	char gall = 0, yall = 0, allmask = 0;
+	int val;
 	
 	p = &ledmap[0];
 	strcpy(s, toLower(argv[1]));
@@ -51,7 +52,7 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 		}
 		gall |= (1 << p->gpin);
 		yall |= (1 << p->ypin);
-		amask |= p->mask;
+		allmask |= p->mask;
 	}
 	if (!name) {
 		if (s[0] == 'a') {
@@ -62,8 +63,10 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 			return -ENOENT;
 		}
 	}
-	printk("name: %s, y=%d, g=%d\n", name, ypin, gpin);
-	printk("yall=0x%x, gall = 0x%x, mask = 0x%02x\n", gall, yall, amask);
+#if 0
+	printk("name: %s, ypin=%d, gpin=%d, mask=0x%x\n", name, ypin, gpin, mask);
+	printk("yall=0x%x, gall = 0x%x, allmask = 0x%02x\n", yall, gall, allmask);
+#endif
 	strcpy(s, toLower(argv[2]));
 	switch (s[0]) {
 	case 'g':
@@ -99,10 +102,13 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 	}
 
 	if (all)
-		mask = amask;
+		mask = allmask;
 
+#if 0
 	printk("gval = 0x%02x\n", gval);
 	printk("mask = 0x%02x\n", mask);
+#endif
+	
 	/* LED Controller is on I2C Bus 5 */
 	set_mux(5);
 
@@ -118,10 +124,19 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 	/* write data */
 
 	i2c_read_bytes(LED_ADDR, 5, buf, 1);
+#if 0
 	printk("read 0x%02x\n", buf[0]);
+#endif
 
 	tmp = buf[0];
-	buf[0] = (tmp & !mask) | gval;
+
+	val = tmp & ~mask;
+#if 0
+	printk("val=0x%x\n", val);
+	printk("tmp=0x%x, mask=0x%x, ~mask=0x%x\n", tmp, mask, ~mask);
+#endif		
+	   
+	buf[0] = (tmp & ~mask) | gval;
 	printk("writing 0x%02x\n", buf[0]);
 	
 	i2c_write_bytes(LED_ADDR, 5, buf, 1);
