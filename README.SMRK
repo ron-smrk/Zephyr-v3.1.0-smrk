@@ -106,4 +106,27 @@ git clone git@github.com:ron-smrk/Zephyr-v3.1.0-smrk.git
 west init -l Zephyr-v3.1.0-smrk
 west update
 
+On Board:
+JTAG Connection:
+
+1 - N/C
+2 - White
+3 - Black
+4 - Purple
+5 - Gray
+6 - Brown
+
+6 pin to JTAG connector
+(Looking a bottom)
+
+  2  1
+  4  3
+  6  5
+
+1 - Blue
+2 - Purple
+3 - Gray
+4 - White
+5 - Black
+6 - Brown
 
