@@ -13,6 +13,7 @@
 #include <zephyr/usb/usb_device.h>
 #include <ctype.h>
 #include "lib.h"
+#include "pmbus.h"
 
 LOG_MODULE_REGISTER(app);
 
@@ -153,12 +154,43 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv)
 
 SHELL_CMD_ARG_REGISTER(version, NULL, "Show kernel version", cmd_version, 1, 0);
 
+static int cmd_pmtst(const struct shell *shell, size_t argc, char **argv)
+{
+	int pg;
+
+	if (argc < 2)
+		pg = 0;
+	else
+		pg = atoi(argv[1]);
+	
+	shell_print(shell, "Set Page to %d", pg);
+/*	set_mux(2); */
+	pmset_page(0x40, pg);
+/* 	pmget_mfr_id(0x40); */
+#if 0
+	pmset_page(0x40, 0);
+	pmget_mfr_id(0x40);
+	pmset_page(0x40, 1);
+	pmget_mfr_id(0x40);
+	pmset_page(0x40, 2);
+	pmget_mfr_id(0x40);
+	pmset_page(0x40, 3);
+	pmget_mfr_id(0x40);
+	k_sleep(K_MSEC(1000));
+#endif
+	return 0;
+}
+
+SHELL_CMD_ARG_REGISTER(pm, NULL, "PMTest", cmd_pmtst, 2, 0);
+
 void main(void)
 {
 	printk("\nWelcome to smrk100g");
 
 	setup_dev(DEV_SET);
 	enable_vdd_3r3();
+
+	
 
 #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_shell_uart), zephyr_cdc_acm_uart)
 	const struct device *dev;
