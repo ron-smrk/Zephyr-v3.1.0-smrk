@@ -154,9 +154,19 @@ enum pmbus_registers {
 	PMBUS_MFR_IOUT_PEAK				= 0xDC, /* R/W word */
 	PMBUS_MFR_TEMPERATURE_PEAK		= 0xDD, /* R/W word */
 	PMBUS_MFR_LDO_MARGIN			= 0xDE, /* R/W word */
+	PMBUS_MFR_HELP					= 0xFF  /* Help Command */
 };
 
+struct pmcommand {
+	int op;		/* bus op is u_char, we use other bytes... */ 
+	char *name;
+	void (*function)();
+};
 
+extern struct pmcommand pbus_cmd[];
+
+
+//extern struct pmcommand pbus_ops[];
 
 /* STATUS_WORD */
 #define PB_STATUS_VOUT           BIT(15)
@@ -256,9 +266,10 @@ enum pmbus_registers {
 #define PB_HAS_MFR_INFO            BIT_ULL(50)
 
 
-int pmset_page(int, unsigned char);
-int pmget_mfr_id(int);
-int pmbus_write(int, int, int, unsigned char *);
-int pmbus_read(int, int, int, unsigned char *);
+extern int pmset_page(int, unsigned char);
+extern int pmget_mfr_id(int);
+extern int pmbus_write(int, int, int, unsigned char *);
+extern int pmbus_read(int, int, int, unsigned char *);
+extern unsigned short toshort(unsigned char *);
 
 #endif /* __PMBUS_H */

@@ -200,6 +200,10 @@ i2c_read_bytes(int dev_addr, int reg_addr, char *obuf, int olen)
 		printk("Failed to read from device: 0x%02x", dev_addr);
 		return -EIO;
 	}
+#if 0
+	printk("i2c_write_read: 0x%02x  0x%02x  0x%02x  0x%02x\n",
+		   obuf[0], obuf[1], obuf[2], obuf[3]);
+#endif
 	return 0;
 }
 
@@ -218,8 +222,8 @@ i2c_write_bytes(int dev_addr, int reg_addr, char *ibuf, int ilen)
 		return -ENODEV;
 	}
 	reg_addr_bytes = get_bytes_count_for_hex(reg_addr);
-	//printk("Write to addr: 0x%x\n", dev_addr);
-	//printk("Write to reg:  0x%x\n", reg_addr);
+	printk("Write to addr: 0x%x\n", dev_addr);
+	printk("Write to reg:  0x%x\n", reg_addr);
 
 	sys_put_be32(reg_addr, buf);
 
@@ -229,7 +233,7 @@ i2c_write_bytes(int dev_addr, int reg_addr, char *ibuf, int ilen)
 		buf[MAX_BYTES_FOR_REGISTER_INDEX + i] = ibuf[i];
 	}
 
-#if 0
+#if 1
 	for (i=0; i<8; i++) {
 		printk("0x%02x ", buf[i]);
 	}

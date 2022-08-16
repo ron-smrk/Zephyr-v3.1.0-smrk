@@ -6,13 +6,20 @@
 #define DEV_REINIT	0
 #define DEV_SET	1
 #define DEF_BUS		"I2C_1"
+#define MAX_ARGSZ_INT	8
 
 extern char *i2c_dev;
+extern int rail;	/* voltage rail on irps5401 (0-4) */
 
+
+
+extern int ishex(char *);
 extern char *strdup(const char *);
 extern char *itoa(int, char *, int);
 extern char *toLower(char *);
 extern char *toUpper(char *);
+extern unsigned int toint(unsigned char *, int);
+extern unsigned short toshort(unsigned char *);
 
 extern void setup_dev(int);
 extern int set_mux(int);
@@ -21,5 +28,14 @@ extern int i2c_read_bytes(int, int, char *, int);
 
 extern int enable_vdd_3r3();
 extern int disable_vdd_3r3();
+extern int pmset_op(int addr, int mode);
+extern int pmset_page(int addr, unsigned char page);
+extern int pmget_mfr_id(int addr);
 
 #endif /* __MYLIB_H */
+
+#define TRUE	(1==1)
+#define FALSE	(1==0)
+
+#define VOLT_ON		1
+#define  VOLT_OFF	0

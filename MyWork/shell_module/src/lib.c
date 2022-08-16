@@ -4,6 +4,7 @@
 #include "lib.h"
 
 
+#include <errno.h>
 
 char *strdup(const char *s)
 {
@@ -52,4 +53,17 @@ char* toLower(char* s) {
 char* toUpper(char* s) {
   for(char *p=s; *p; p++) *p=toupper(*p);
   return s;
+}
+
+int
+ishex(char *s)
+{
+	int i, len;
+	len = strlen(s);
+	if (len > MAX_ARGSZ_INT)
+		return -EINVAL;
+	for ( i = 0; i < len; i++ )
+		if (!isxdigit(s[i]))
+			return 0;
+	return 1;
 }
