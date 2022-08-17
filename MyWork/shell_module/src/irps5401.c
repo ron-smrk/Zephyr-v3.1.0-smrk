@@ -13,12 +13,76 @@
 #include <string.h>
 #include <math.h>
 
+struct pm_list {
+	unsigned char command;
+	int size;
+	char *name;
+	char *units;
+	int type;
+} pm_info [] = {
+	{PMBUS_READ_VOUT, 2, "Output Voltage", "V", PM_LINEAR8},
+	{PMBUS_READ_IOUT, 2, "Output Current", "Amps", PM_LINEAR11},
+	{PMBUS_READ_TEMPERATURE_1, 2, "Temperature", "Degrees C", PM_LINEAR11},
+	{}
+};
 
 struct mapping {
 	char *name;
 	int val;
 };
 
+double
+decode(unsigned short v, int type)
+{
+	if (type == PM_LINEAR8)
+		return (v* pow(2, -8));
+	else
+		return (v* pow(2, -11));
+}
+
+/*
+ * Assume page is set already
+ */
+static int
+dumpval(int addr, struct pm_list *p)
+{
+	unsigned char id[8];
+	unsigned short v;
+	pmbus_read(addr, p->command, p->size, id);
+	v = toshort(id);
+	
+	printk("Got 0x%x for value\n", v);
+	switch (p->type) {
+	case PM_LINEAR8:
+	case PM_LINEAR11:
+		printk("  %s: %.4f %s\n", p->name, decode(v, p->type), p->units);
+		break;
+	default:
+		if (p->size == 1)
+			printk("  %s = 0x%02x\n", p->name, v & 0xff);
+		else
+			printk("  %s = 0x%04x\n", p->name, v);
+		break;
+	}
+
+	return 0;
+}
+
+static int
+dumpall(int addr, int rail)
+{
+	struct pm_list *p;
+	
+	if (pmset_page(addr, rail) < 0) {
+		printk("Can't set page %d\n", rail);
+		return -EIO;
+	}
+	
+	for (p = pm_info; p->name; p++) {
+		dumpval(0x40, p);
+	}
+	return 0;
+}
 int map(char *s, struct mapping *p)
 {
 	s = toLower(s);
@@ -86,7 +150,6 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 {
 	char *dev = toLower(argv[1]);
 	int rail;
-	double v;
 	
 	printk("\nDumping Device %s\n", dev);
 
@@ -97,8 +160,12 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 	}
 	printk("rail = %d\n", rail);
 
+	dumpall(0x40, rail);
+#if 0
+	double v;
 	v = pmread_vout(0x40, rail);
 	printk("V: %.4f\n", v);
+#endif
 	return 0;
 }
 static int

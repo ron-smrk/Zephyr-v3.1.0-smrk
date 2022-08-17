@@ -251,4 +251,10 @@ extern unsigned short toshort(unsigned char *);
 extern int pmset_op(int, int, int);
 extern double pmread_vout(int, int);
 
+/*
+ * Data encoding types
+ */
+#define PM_LINEAR8	0
+#define PM_LINEAR11	1
+
 #endif /* __PMBUS_H */
