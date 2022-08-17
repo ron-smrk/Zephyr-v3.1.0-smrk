@@ -143,30 +143,7 @@ enum pmbus_registers {
     PMBUS_MFR_PIN_ACCURACY          = 0xAC, /* Read-Only byte */
     PMBUS_IC_DEVICE_ID              = 0xAD, /* Read-Only block-read */
     PMBUS_IC_DEVICE_REV             = 0xAE, /* Read-Only block-read */
-    PMBUS_MFR_MAX_TEMP_1            = 0xC0, /* R/W word */
-    PMBUS_MFR_MAX_TEMP_2            = 0xC1, /* R/W word */
-    PMBUS_MFR_MAX_TEMP_3            = 0xC2, /* R/W word */
-	PMBUS_MFR_REG_ACCESS			= 0xD0, /* Block Write, R word */
-	PMBUS_MFR_I2C_ADDRESS			= 0xD6, /* R/W byte */
-	PMBUS_MFR_TPGDLY				= 0xD8, /* R/W word */
-	PMBUS_MFR_FCCM					= 0xD9, /* R/W word */
-	PMBUS_MFR_VOUT_PEAK				= 0xDB, /* R/W word */
-	PMBUS_MFR_IOUT_PEAK				= 0xDC, /* R/W word */
-	PMBUS_MFR_TEMPERATURE_PEAK		= 0xDD, /* R/W word */
-	PMBUS_MFR_LDO_MARGIN			= 0xDE, /* R/W word */
-	PMBUS_MFR_HELP					= 0xFF  /* Help Command */
 };
-
-struct pmcommand {
-	int op;		/* bus op is u_char, we use other bytes... */ 
-	char *name;
-	void (*function)();
-};
-
-extern struct pmcommand pbus_cmd[];
-
-
-//extern struct pmcommand pbus_ops[];
 
 /* STATUS_WORD */
 #define PB_STATUS_VOUT           BIT(15)
@@ -271,5 +248,7 @@ extern int pmget_mfr_id(int);
 extern int pmbus_write(int, int, int, unsigned char *);
 extern int pmbus_read(int, int, int, unsigned char *);
 extern unsigned short toshort(unsigned char *);
+extern int pmset_op(int, int, int);
+extern double pmread_vout(int, int);
 
 #endif /* __PMBUS_H */

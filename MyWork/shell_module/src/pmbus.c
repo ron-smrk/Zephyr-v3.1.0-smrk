@@ -311,12 +311,35 @@ pmget_mfr_id(int addr)
 	return 0;
 }
 
+double
+pmread_vout(int addr, int rail)
+{
+	char id[5];
+	double volt;
+	int v;
+
+	if (pmset_page(addr, rail) < 0) {
+		printk("Can't set page %d\n", rail);
+		return -EIO;
+	}
+
+	pmbus_read(addr, 0x8b, 2, id);
+	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
+	v = toshort(id);
+
+	volt = (double)v;
+	printk("vout = %.4f\n", volt);
+	printk("vout (div) = %.4f\n", volt/4096.0);
+	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
+	return volt;
+}
+
 
 /*
  * Mode setting, ON or OFF
  */
 int
-pmset_op(int addr, int mode)
+pmset_op(int addr, int rail, int mode)
 {
 	int byte;
 	if (mode == VOLT_ON) {
@@ -326,6 +349,10 @@ pmset_op(int addr, int mode)
 	} else {
 		printk("Bad mode\n");
 		return -EINVAL;
+	}
+	if (pmset_page(addr, rail) < 0) {
+		printk("Can't set page %d\n", rail);
+		return -EIO;
 	}
 	return pmbus_write(addr, 0x01, 1, &byte);
 }
@@ -352,19 +379,19 @@ toint(unsigned char *x, int nbytes)
 }
 
 
-int
-pm_list()
-{
-	struct pmcommand *p = &pbus_cmd[0];
+/* int */
+/* pm_list() */
+/* { */
+/* 	struct pmcommand *p = &pbus_cmd[0]; */
 
-	printk("OP   Command\n");
-	while (p->op != -1) {
-		printk("%02x - %s\n", p->op, p->name);
-		p++;
-	}
+/* 	printk("OP   Command\n"); */
+/* 	while (p->op != -1) { */
+/* 		printk("%02x - %s\n", p->op, p->name); */
+/* 		p++; */
+/* 	} */
 
 	
-}
+/* } */
 
 int
 pm_help()
@@ -372,49 +399,47 @@ pm_help()
 	printk("HELP!!\n");
 }
 
-struct pmcommand pbus_cmd[] = {
-	{-2, "list", pm_list},
-	{-3, "help", pm_help},
-	{PMBUS_PAGE, "page", pmset_page},
-	{PMBUS_OPERATION, "op", pmset_op},
-	{PMBUS_MFR_ID, "mfr_id", pmget_mfr_id},
-	{-1, NULL, NULL}
-};
+/* struct pmcommand pbus_cmd[] = { */
+/* 	{-2, "list", pm_list}, */
+/* 	{-3, "help", pm_help}, */
+/* 	{PMBUS_PAGE, "page", pmset_page}, */
+/* 	{PMBUS_OPERATION, "op", pmset_op}, */
+/* 	{PMBUS_MFR_ID, "mfr_id", pmget_mfr_id}, */
+/* 	{-1, NULL, NULL} */
+/* }; */
 
-static int cmd_pmtst(const struct shell *shell, size_t argc, char **argv)
-{
+/* static int cmd_pmtst(const struct shell *shell, size_t argc, char **argv) */
+/* { */
 
-	int hval = -1;
-	int v = ishex(argv[1]);
+/* 	int hval = -1; */
+/* 	int v = ishex(argv[1]); */
 	
-	if (v < 0) {
-		printk("\nBad arg %s\n", argv[1]);
-		return v;
-	} else if (v == 0) {
-		printk("\nCommand: %s\n", argv[1]);
-	} else {
-		hval = strtol(argv[1], NULL, 16);
-		printk("\nhex: 0x%x\n", hval);
-	}
+/* 	if (v < 0) { */
+/* 		printk("\nBad arg %s\n", argv[1]); */
+/* 		return v; */
+/* 	} else if (v == 0) { */
+/* 		printk("\nCommand: %s\n", argv[1]); */
+/* 	} else { */
+/* 		hval = strtol(argv[1], NULL, 16); */
+/* 		printk("\nhex: 0x%x\n", hval); */
+/* 	} */
 
-	struct pmcommand *p = &pbus_cmd[0];
+/* 	struct pmcommand *p = &pbus_cmd[0]; */
 
-	int found = 0;
-	while (p->op != -1) {
-		if (strcmp(argv[1], p->name) == 0) {
-			found++;
-			p->function();
-			break;
-		}
-		p++;
-	}
+/* 	int found = 0; */
+/* 	while (p->op != -1) { */
+/* 		if (strcmp(argv[1], p->name) == 0) { */
+/* 			found++; */
+/* 			p->function(); */
+/* 			break; */
+/* 		} */
+/* 		p++; */
+/* 	} */
 	
-	if (!found) {
-		printk("Bad command\n");
-		return -EINVAL;
-	}
-	return 0;
+/* 	if (!found) { */
+/* 		printk("Bad command\n"); */
+/* 		return -EINVAL; */
+/* 	} */
+/* 	return 0; */
 	
-}
-
-SHELL_CMD_ARG_REGISTER(pm, NULL, "PMBus Commands", cmd_pmtst, 2, 0);
+/* } */

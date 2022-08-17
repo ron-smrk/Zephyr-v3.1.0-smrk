@@ -28,9 +28,6 @@ extern int i2c_read_bytes(int, int, char *, int);
 
 extern int enable_vdd_3r3();
 extern int disable_vdd_3r3();
-extern int pmset_op(int addr, int mode);
-extern int pmset_page(int addr, unsigned char page);
-extern int pmget_mfr_id(int addr);
 
 #endif /* __MYLIB_H */
 

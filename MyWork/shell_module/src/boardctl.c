@@ -26,7 +26,7 @@ setup_vdd_3r3()
 		return -EIO;
 	}
 #endif
-	gpio_dump_regs(XGPIOA);
+	//gpio_dump_regs(XGPIOA);
 	return 0;
 }
 
@@ -46,11 +46,11 @@ enable_vdd_3r3()
 	int rval = setup_vdd_3r3();
 
 	if (rval == 0) {
-		printk("Enable 3.3\n");
-		gpio_dump1(XGPIOA,GPIO_ODR); 
+		printk("\nEnable 3.3\n");
+		//gpio_dump1(XGPIOA,GPIO_ODR); 
 		rval = gpio_pin_set_dt(&enable_vdd_33, 1);
-		gpio_dump1(XGPIOA,GPIO_ODR); 
-		printk("rval=%d\n", rval);
+		//gpio_dump1(XGPIOA,GPIO_ODR); 
+		// printk("rval=%d\n", rval);
 	}
 	return rval;
 }
