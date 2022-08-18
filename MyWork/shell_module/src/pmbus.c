@@ -55,7 +55,7 @@ pm_rd_common(int addr, int command, int length, unsigned char *data, int blk)
 
 	/* reads return first byte junk??? */
 	i2c_read_bytes(addr, command, tmp, length + blk);
-#if 1
+#if 0
 	{
 		for (i = 0; i < 4; i++) {
 			printk("0x%02x ", tmp[i]);
@@ -84,7 +84,7 @@ pmbus_wr_common(int addr, int command, int length, unsigned char *data, int blk)
 {
 	unsigned char sendbuf[131];
 	
-	printk("wr: lenght=0x%x, blk=%d\n", length, blk);
+	//printk("wr: length=0x%x, blk=%d\n", length, blk);
 	if (blk) {
 		sendbuf[0] = length;
 		memcpy(sendbuf+1, data, length);
@@ -92,7 +92,7 @@ pmbus_wr_common(int addr, int command, int length, unsigned char *data, int blk)
 	} else {
 		memcpy(sendbuf, data, length);
 	}
-#if 1
+#if 0
 	int i;
 	for (i=0; i<8; i++) {
 		printk("0x%02x ", sendbuf[i]);
@@ -216,7 +216,7 @@ pmset_page(int addr, unsigned char page)
 {
 	unsigned char read_page;
 
-	printk("setting to page %d\n", page);
+	//printk("setting to page %d\n", page);
 	pmbus_write(addr, 0x00, 1, &page);
 
 	pmbus_read(addr, 0x00, 1, &read_page);

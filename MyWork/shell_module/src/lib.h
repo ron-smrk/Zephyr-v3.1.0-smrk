@@ -20,6 +20,7 @@ extern char *toLower(char *);
 extern char *toUpper(char *);
 extern unsigned int toint(unsigned char *, int);
 extern unsigned short toshort(unsigned char *);
+extern double mytrunc(double, int);
 
 extern void setup_dev(int);
 extern int set_mux(int);

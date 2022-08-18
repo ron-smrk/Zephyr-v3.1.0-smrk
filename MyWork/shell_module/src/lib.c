@@ -67,3 +67,14 @@ ishex(char *s)
 			return 0;
 	return 1;
 }
+
+double
+mytrunc(double f, int roundto)
+{
+
+	int x = (int)f;
+
+	x = x+roundto;
+	x = (x/roundto)*roundto;
+	return (double) x;
+}

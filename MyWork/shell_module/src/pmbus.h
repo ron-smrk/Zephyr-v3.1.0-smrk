@@ -256,5 +256,6 @@ extern double pmread_vout(int, int);
  */
 #define PM_LINEAR8	0
 #define PM_LINEAR11	1
+#define PM_IOUT		2
 
 #endif /* __PMBUS_H */

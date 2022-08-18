@@ -21,7 +21,7 @@ struct pm_list {
 	int type;
 } pm_info [] = {
 	{PMBUS_READ_VOUT, 2, "Output Voltage", "V", PM_LINEAR8},
-	{PMBUS_READ_IOUT, 2, "Output Current", "Amps", PM_LINEAR11},
+	{PMBUS_READ_IOUT, 2, "Output Current", "Amps", PM_IOUT},
 	{PMBUS_READ_TEMPERATURE_1, 2, "Temperature", "Degrees C", PM_LINEAR11},
 	{}
 };
@@ -35,9 +35,19 @@ double
 decode(unsigned short v, int type)
 {
 	if (type == PM_LINEAR8)
-		return (v* pow(2, -8));
-	else
-		return (v* pow(2, -11));
+		return (v*pow(2, -8));
+	else if (type == PM_IOUT) {
+		double tmp = (double) (v*pow(2, -8));
+		tmp =  mytrunc(tmp, 125);
+		return tmp/1000;
+	} else if (type == PM_LINEAR11) {
+		int exp = (v >> 11) & 0x1f;
+		v = v & 0x7ff;
+		return (v * pow(2, -(exp)));
+	} else {
+		printk("Unsupported format\n");
+		return -1;
+	}
 }
 
 /*
@@ -48,13 +58,17 @@ dumpval(int addr, struct pm_list *p)
 {
 	unsigned char id[8];
 	unsigned short v;
+	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(addr, p->command, p->size, id);
+	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
+		  
 	v = toshort(id);
 	
-	printk("Got 0x%x for value\n", v);
+	//printk("Got 0x%x for value for %s\n", v, p->name);
 	switch (p->type) {
 	case PM_LINEAR8:
 	case PM_LINEAR11:
+	case PM_IOUT:
 		printk("  %s: %.4f %s\n", p->name, decode(v, p->type), p->units);
 		break;
 	default:
@@ -158,7 +172,7 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 		printk("Bad rail %s\n", dev);
 		return -1;
 	}
-	printk("rail = %d\n", rail);
+	// printk("rail = %d\n", rail);
 
 	dumpall(0x40, rail);
 #if 0
