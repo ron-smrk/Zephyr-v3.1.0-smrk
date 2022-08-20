@@ -198,7 +198,8 @@ void main(void)
 	printk("\nWelcome to smrk100g");
 
 	setup_dev(DEV_SET);
-	enable_vdd_3r3();
+	printk("VDD 3.3 on.\n");
+	vdd_3r3_on(NULL);
 
 	
 

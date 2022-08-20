@@ -13,6 +13,63 @@
 #include <string.h>
 #include <math.h>
 
+int
+irps_setpage(int addr, unsigned char page)
+{
+	unsigned char read_page;
+
+	//printk("setting to page %d\n", page);
+	pmbus_write(addr, PMBUS_PAGE, 1, &page);
+
+	pmbus_read(addr, PMBUS_PAGE, 1, &read_page);
+
+	if (page != read_page) {
+		printk("Failed to set page to %d (read back %d instead)\n",
+			   page, read_page);
+		return -EIO;
+	}
+	return read_page;
+}
+
+
+/*
+ * Mode setting, ON or OFF
+ */
+static  int
+irps_setop(int addr, int rail, int mode)
+{
+	unsigned char byte;
+	if (mode == VOLT_ON) {
+		byte = 0x80;
+	} else if (mode == VOLT_OFF) {
+		byte = 0;
+	} else {
+		printk("Bad mode\n");
+		return -EINVAL;
+	}
+	if (irps_setpage(addr, rail) < 0) {
+		printk("Can't set page %d\n", rail);
+		return -EIO;
+	}
+	return pmbus_write(addr, PMBUS_OPERATION, 1, &byte);
+}
+
+static int
+irps_getmfr_id(int addr)
+{
+	char id[5];
+	int v;
+
+	pmbus_rdblock(addr, PMBUS_MFR_ID, 3, id);
+	// printk("ID: 0x%x 0x%x 0x%x\n", id[0], id[1], id[2]);
+
+	v = toint(id, 3);
+	// printk("Got 0x%06x for mfr_id!\n", v);
+	return v;
+
+}
+
+
 struct pm_list {
 	unsigned char command;
 	int size;
@@ -87,7 +144,7 @@ dumpall(int addr, int rail)
 {
 	struct pm_list *p;
 	
-	if (pmset_page(addr, rail) < 0) {
+	if (irps_setpage(addr, rail) < 0) {
 		printk("Can't set page %d\n", rail);
 		return -EIO;
 	}
@@ -133,6 +190,7 @@ struct mapping looptab[] = {
 	{"c", 2},
 	{"d", 3},
 	{"ldo", 4},
+	{"all", -1},
 	{NULL,0}
 };
 
@@ -204,30 +262,170 @@ irps_main(const struct shell *sh, size_t argc, char **argv)
 		return -1;
 	}
 	printk("\nturning rail %s (%d) %s\n", dev, rail, state);
-	pmset_op(0x40, rail, val);
+	irps_setop(0x40, rail, val);
 
 	return 0;
 }
 
 			  
-SHELL_SUBCMD_SET_CREATE(sub_irps, (irps));
-SHELL_SUBCMD_ADD((irps), help, NULL, "help for irps", irps_help, 1, 0);
-SHELL_SUBCMD_ADD((irps), dump, NULL, "Dump Info", irps_dump, 2, 0);
-//SHELL_CMD_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", NULL);
-SHELL_CMD_ARG_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", irps_main, 1, 3);
-
 /******************************************************************
  * IRPS commands
  * irps help
  * irps <dev> [on|offp]
  * irps dump <dev>
  *
- * dev: 
+ * dev: 0-4, a-d, ldo, all
  */
+SHELL_SUBCMD_SET_CREATE(sub_irps, (irps));
+SHELL_SUBCMD_ADD((irps), help, NULL, "help for irps", irps_help, 1, 0);
+SHELL_SUBCMD_ADD((irps), dump, NULL, "Dump Info", irps_dump, 2, 0);
+//SHELL_CMD_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", NULL);
+SHELL_CMD_ARG_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", irps_main, 1, 3);
 
-#if 0
-SHELL_SUBCMD_ADD((my2c), set, NULL, "help for set", i2c_set_bus, 2, 0);
-SHELL_SUBCMD_ADD((my2c), dev, NULL, "help for dev", i2c_set_dev, 1, 1);
+/*
+ * VDD 1R8, enable: Loop D, PG: PC8, read VOUT
+ */
+int
+vdd_1r8_on(char *v)
+{
+	if (v)
+		printk("%s on\n", v);
+	return 0;
+}
+int
+vdd_1r8_off(char *v)
+{
+	if (v)
+		printk("%s off\n", v);
+	return 0;
+}
+int
+vdd_1r8_isgood(char *v)
+{
+	if (v)
+		printk("%s good\n", v);
+	return POWER_GOOD;
+}
 
-SHELL_CMD_REGISTER(my2c, &sub_my2c, "I2C Control Functions", NULL);
-#endif
+double
+vdd_1r8_rdvolt(char *v)
+{
+	if (v)
+		printk("%s rdvolt\n", v);
+	if (vdd_1r8_isgood(NULL))
+		return 1.8;
+	else
+		return 0.0;
+}
+
+
+/*
+ * VDD_2r5: enable Loop B, PG: PB13, read VOUT
+ */
+int
+vdd_2r5_on(char *v)
+{
+	if (v)
+		printk("%s on\n", v);
+	return 0;
+}
+int
+vdd_2r5_off(char *v)
+{
+	if (v)
+		printk("%s off\n", v);
+	return 0;
+}
+int
+vdd_2r5_isgood(char *v)
+{
+	if (v)
+		printk("%s good\n", v);
+	return POWER_GOOD;
+}
+
+double
+vdd_2r5_rdvolt(char *v)
+{
+	if (v)
+		printk("%s: rdvolt\n", v);
+	if (vdd_2r5_isgood(NULL))
+		return 2.5;
+	else
+		return 0.0;
+}
+
+
+/*
+ * VDD_0r9: enable Loop C, PG: PC13, read VOUT
+ */
+int
+vdd_0r9_on(char *v)
+{
+	if (v)
+		printk("%s on\n", v);
+	return 0;
+}
+int
+vdd_0r9_off(char *v)
+{
+	if (v)
+		printk("%s off\n", v);
+	return 0;
+}
+int
+vdd_0r9_isgood(char *v)
+{
+	if (v)
+		printk("good %s good\n", v);
+	return POWER_GOOD;
+}
+
+double
+vdd_0r9_rdvolt(char *v)
+{
+	if (v)
+		printk("%s: rdvolt\n", v);
+	if (vdd_0r9_isgood(NULL))
+		return 0.9;
+	else
+		return 0.0;
+}
+
+
+/*
+ * VDD_1r0: enable Loop LDO, PG: PB12, read VOUT
+ */
+int
+vdd_1r0_on(char *v)
+{
+	if (v)
+		printk("%s on\n", v);
+	return 0;
+}
+int
+vdd_1r0_off(char *v)
+{
+	if (v)
+		printk("%s off\n", v);
+	return 0;
+}
+int
+vdd_1r0_isgood(char *v)
+{
+	if (v)
+		printk("%s good\n", v);
+	return POWER_GOOD;
+}
+
+
+double
+vdd_1r0_rdvolt(char *v)
+{
+	if (v)
+		printk("%s: rdvolt\n", v);
+	if (vdd_1r0_isgood(NULL))
+		return 1.0;
+	else
+		return 0.0;
+}

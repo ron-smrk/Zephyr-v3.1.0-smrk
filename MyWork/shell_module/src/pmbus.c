@@ -5,6 +5,7 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/zephyr.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/console/console.h>
 
 #include "lib.h"
 #include "pmbus.h"
@@ -211,235 +212,195 @@ pmbus_rdblock(int addr, int command, int length, unsigned char *data)
 }
 #endif
 
-int
-pmset_page(int addr, unsigned char page)
+/*
+ * pm commands
+ * pm help
+ * pm seq [-w|-n [time]] <on|off>
+ * pm status
+ * pm rdvolt
+ */
+
+static int
+pmbus_help(const struct shell *sh, size_t argc, char **argv)
 {
-	unsigned char read_page;
-
-	//printk("setting to page %d\n", page);
-	pmbus_write(addr, 0x00, 1, &page);
-
-	pmbus_read(addr, 0x00, 1, &read_page);
-
-	if (page != read_page) {
-		printk("Failed to set page to %d (read back %d instead)\n",
-			   page, read_page);
-		return -EIO;
-	}
-	return read_page;
-}
-
-int
-pmget_mfr_id(int addr)
-{
-	char id[5];
-	double volt;
-	int v;
-
-	pmbus_rdblock(addr, 0x99, 3, id);
-	printk("ID: 0x%x 0x%x 0x%x\n", id[0], id[1], id[2]);
-
-	v = toint(id, 3);
-	printk("Got 0x%06x for mfr_id!\n", v);
-	return ;
-
-
-
-	pmbus_rdblock(addr, 0x9a, 4, id);
-	printk("Model: 0x%x 0x%x 0x%x 0x%x\n", id[0], id[1], id[2], id[3]);
-
-
-	pmbus_rdblock(addr, 0xad, 1, id);
-	printk("DevID: 0x%x\n", id[0]);
-
-	pmbus_read(addr, 0x20, 1, id);
-	printk("VOUT Mode: 0x%x\n", id[0]);
-
-	pmbus_read(addr, 0x8b, 2, id);
-	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-
-	volt = (double)v;
-	printk("vout = %.4f\n", volt);
-	printk("vout (div) = %.4f\n", volt/4096.0);
-	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
-
-
-	int sec = 2;
-	printk("%d sec...\n", sec);
-	k_sleep(K_MSEC(sec * 1000));
-
-
-	unsigned char val = 0;	// Immediate off
-	pmbus_write(addr, 0x01, 1, &val);
-
-	pmbus_read(addr, 0x8b, 2, id);
-	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-
-	volt = (double)v;
-	printk("vout = %.4f\n", volt);
-	printk("vout (div) = %.4f\n", volt/4096.0);
-	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
-
-	printk("%d sec...\n", sec);
-	k_sleep(K_MSEC(sec * 1000));
-	val = 0x80;
-	pmbus_write(addr, 0x01, 1, &val);
-
-	pmbus_read(addr, 0x8b, 2, id);
-	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-
-	volt = (double)v;
-	printk("vout = %.4f\n", volt);
-	printk("vout (div) = %.4f\n", volt/4096.0);
-	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
-
-	sec = 2;
-	printk("%d sec...\n", sec);
-	k_sleep(K_MSEC(sec * 1000));
-
-	pmbus_read(addr, 0x8b, 2, id);
-	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-
-	volt = (double)v;
-	printk("vout = %.4f\n", volt);
-	printk("vout (div) = %.4f\n", volt/4096.0);
-	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
+	printk("\nPower Sequencing Options\n");
+	printk("pm seq [-w|-n [time]] <on|off>\n");
+	//printk("-w - Wait for Key Input between stages\n");
+	printk("-n SEC - Wait for N seconds between stages\n");
+	printk("on|off - tune power on/off\n");
+	printk("status - status of power management\n");
+	printk("rdvolt - read voltages\n");
 	return 0;
 }
 
-double
-pmread_vout(int addr, int rail)
+static int
+pmbus_status(const struct shell *sh, size_t argc, char **argv)
 {
-	char id[5];
-	double volt;
-	int v;
+	printk("\nStatus\n");
+	return 0;
+}
+struct power_rails {
+	int(*on)(char *);
+	int(*off)(char *);
+	int(*isgood)(char *);
+	double(*rdvolt)(char *);
+	char *signal;
+} rails[] = {
+	{vdd_0r85_on, vdd_0r85_off, vdd_0r85_isgood, vdd_0r85_rdvolt,
+	 "VDD_0R85"},
+	{vdd_1r8_on, vdd_1r8_off, vdd_1r8_isgood, vdd_1r8_rdvolt,
+	 "VDD_1R8FPGA"},
+	{vdd_3r3_on, vdd_3r3_off, vdd_3r3_isgood, vdd_3r3_rdvolt,
+	 "VDD_3R3"},
+	{vdd_1r2_ddr_on, vdd_1r2_ddr_off, vdd_1r2_ddr_isgood, vdd_1r2_ddr_rdvolt,
+	 "VDD_IR2_DDR"},
+	{vdd_0r6_on, vdd_0r6_off, vdd_0r6_isgood, vdd_0r6_rdvolt,
+	 "VDD_0R6_VTT"},
+	{vdd_2r5_on, vdd_2r5_off, vdd_2r5_isgood, vdd_2r5_rdvolt,
+	 "VDD_2R5"},
+	{vdd_1r2_mgt_on, vdd_1r2_mgt_off, vdd_1r2_mgt_isgood, vdd_1r2_mgt_rdvolt,
+	 "VDD_1R2_MGTVTT"},
+	{vdd_0r9_on, vdd_0r9_off, vdd_0r9_isgood, vdd_0r9_rdvolt,
+	 "VDD_0R9_MGTAVCC"},
+	{vdd_1r0_on, vdd_1r0_off, vdd_1r0_isgood, vdd_1r0_rdvolt,
+	 "VDD_1R0"},
+};
 
-	if (pmset_page(addr, rail) < 0) {
-		printk("Can't set page %d\n", rail);
-		return -EIO;
+	
+static int
+pmbus_seq(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	int n = -1;
+	int wflg = 0;
+	char *tmp = NULL;
+	int val = -1;
+	int nrails;
+
+	if (0){
+		int x = 0;
+		while (1) {
+			if (x&1)
+				vdd_1r2_ddr_on("ON!");
+			else
+				vdd_1r2_ddr_off("OFF!");
+			x++;
+		}
 	}
 
-	pmbus_read(addr, 0x8b, 2, id);
-	printk("VOUT (0x8b): 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
 
-	volt = (double)v;
-	printk("vout = %.4f\n", volt);
-	printk("vout (div) = %.4f\n", volt/4096.0);
-	printk("vout (exp) = %.4f\n", volt * pow(2, -8));
-	return volt;
-}
+	{
+		int x, val;
+		if (strcmp(argv[1], "0") == 0)
+			val = 0;
+		else
+			val = 1;
+		//x = vdd_1r2_ddr_isgood("PRE");
+		//printk("Before set to %d good=%d\n", val, x);
+		if (val)
+			vdd_1r2_ddr_on("ON!");
+		else
+			vdd_1r2_ddr_off("OFF!");
+		x = vdd_1r2_ddr_isgood("POST");
+		printk("After set to %d good=%d\n", val, x);
 
+		return 1;
+	}
+		
+	printk("\nSequence\n");
+	for (i = 1; i < argc; i++) {
+		if (argv[i][0] == '-') {
+			switch (argv[i][1]) {
+			case 'w':
+				wflg++;
+				break;
+			case 'n':
+				n = atoi(argv[i+1]);
+				if (n <- 0) {
+					printk(" N must be > 0\n");
+					return -1;
+				}
+				i++;
+				break;
+			default:
+				printk("Bad option: %c\n", argv[i][1]);
+				return -1;
+			}
+		} else {
+			tmp = strdup(argv[i]);
+			tmp = toLower(tmp);
+			if (strcmp(tmp, "on") == 0) {
+				val = 1;
+			} else if (strcmp(tmp, "off") == 0) {
+				val = 0;
+			} else {
+				printk("Bad arg: %s\n", argv[i]);
+				free(tmp);
+				return -1;
+			}
+			free(tmp);
+		}
+	}
+	//printk("w=%d, val=%d\n", wflg, val);
+	//if (n > 0 )
+	//	printk("Delay: %d\n", n);
+	//	if (wflg)
+	//		console_init();
 
-/*
- * Mode setting, ON or OFF
- */
-int
-pmset_op(int addr, int rail, int mode)
-{
-	int byte;
-	if (mode == VOLT_ON) {
-		byte = 0x80;
-	} else if (mode == VOLT_OFF) {
-		byte = 0;
+	// For now ignore
+	wflg = 0;
+
+	nrails = sizeof(rails)/sizeof(struct power_rails);
+//	uint8_t c;
+	if (val == 1) {
+		i = 0;
+		while(i < nrails) {
+			rails[i].on(rails[i].signal);
+		    rails[i].isgood(rails[i].signal);
+			if (n>0)
+				k_sleep(K_MSEC(1000*n));
+			else if (wflg) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i++;
+		}
 	} else {
-		printk("Bad mode\n");
-		return -EINVAL;
+		// point to last one
+		i = nrails-1;
+		while (i >= 0) {
+			rails[i].off(rails[i].signal);
+			if (n>0)
+				k_sleep(K_MSEC(1000*n));
+			else if (wflg) {
+			}
+			i--;
+		}
 	}
-	if (pmset_page(addr, rail) < 0) {
-		printk("Can't set page %d\n", rail);
-		return -EIO;
+	return 0;
+}
+static int
+pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
+{
+	int nrails, i;
+	double volts;
+	
+	printk("\nVoltage Rails:\n");
+	nrails = sizeof(rails)/sizeof(struct power_rails);
+	i = 0;
+	while(i < nrails) {
+		volts = rails[i].rdvolt(NULL);
+		printk("%20s: %.4fV\n", rails[i].signal, volts);
+		i++;
 	}
-	return pmbus_write(addr, 0x01, 1, &byte);
-}
-unsigned short
-toshort(unsigned char *x)
-{
-	return (unsigned short) ((x[0] << 8) | x[1]);
+	return 0;
 }
 
-unsigned int
-toint(unsigned char *x, int nbytes)
-{
-	unsigned int rval = 0;
-	int i = 0;
+SHELL_SUBCMD_SET_CREATE(sub_pmbus, (pm));
+SHELL_SUBCMD_ADD((pm), help, NULL, "Help for pmbus commands", pmbus_help, 1, 0);
+SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq, 2, 2);
+SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status, 1, 1);
+SHELL_SUBCMD_ADD((pm), rdvolt, NULL, "Read Voltages", pmbus_rdvolt, 1, 1);
 
-	for (i = 0; i < nbytes; i++) {
-		rval <<= 8;
-		printk("B: rval=0x%x, x[%d]=0x%x\n", rval, i, x[i]);
-		rval |= x[i];
-		printk("A: rval=0x%x\n", rval);
-	}			
-	printk("return 0x%x (sz=%d)\n", rval, nbytes);
-	return rval;
-}
-
-
-/* int */
-/* pm_list() */
-/* { */
-/* 	struct pmcommand *p = &pbus_cmd[0]; */
-
-/* 	printk("OP   Command\n"); */
-/* 	while (p->op != -1) { */
-/* 		printk("%02x - %s\n", p->op, p->name); */
-/* 		p++; */
-/* 	} */
-
-	
-/* } */
-
-int
-pm_help()
-{
-	printk("HELP!!\n");
-}
-
-/* struct pmcommand pbus_cmd[] = { */
-/* 	{-2, "list", pm_list}, */
-/* 	{-3, "help", pm_help}, */
-/* 	{PMBUS_PAGE, "page", pmset_page}, */
-/* 	{PMBUS_OPERATION, "op", pmset_op}, */
-/* 	{PMBUS_MFR_ID, "mfr_id", pmget_mfr_id}, */
-/* 	{-1, NULL, NULL} */
-/* }; */
-
-/* static int cmd_pmtst(const struct shell *shell, size_t argc, char **argv) */
-/* { */
-
-/* 	int hval = -1; */
-/* 	int v = ishex(argv[1]); */
-	
-/* 	if (v < 0) { */
-/* 		printk("\nBad arg %s\n", argv[1]); */
-/* 		return v; */
-/* 	} else if (v == 0) { */
-/* 		printk("\nCommand: %s\n", argv[1]); */
-/* 	} else { */
-/* 		hval = strtol(argv[1], NULL, 16); */
-/* 		printk("\nhex: 0x%x\n", hval); */
-/* 	} */
-
-/* 	struct pmcommand *p = &pbus_cmd[0]; */
-
-/* 	int found = 0; */
-/* 	while (p->op != -1) { */
-/* 		if (strcmp(argv[1], p->name) == 0) { */
-/* 			found++; */
-/* 			p->function(); */
-/* 			break; */
-/* 		} */
-/* 		p++; */
-/* 	} */
-	
-/* 	if (!found) { */
-/* 		printk("Bad command\n"); */
-/* 		return -EINVAL; */
-/* 	} */
-/* 	return 0; */
-	
-/* } */
+SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);

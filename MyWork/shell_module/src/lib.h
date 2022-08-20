@@ -27,9 +27,6 @@ extern int set_mux(int);
 extern int i2c_write_bytes(int, int, char *, int);
 extern int i2c_read_bytes(int, int, char *, int);
 
-extern int enable_vdd_3r3();
-extern int disable_vdd_3r3();
-
 #endif /* __MYLIB_H */
 
 #define TRUE	(1==1)

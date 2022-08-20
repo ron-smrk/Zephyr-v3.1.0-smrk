@@ -63,7 +63,7 @@ ishex(char *s)
 	if (len > MAX_ARGSZ_INT)
 		return -EINVAL;
 	for ( i = 0; i < len; i++ )
-		if (!isxdigit(s[i]))
+		if (!isxdigit((int)s[i]))
 			return 0;
 	return 1;
 }
@@ -78,3 +78,25 @@ mytrunc(double f, int roundto)
 	x = (x/roundto)*roundto;
 	return (double) x;
 }
+unsigned short
+toshort(unsigned char *x)
+{
+	return (unsigned short) ((x[0] << 8) | x[1]);
+}
+
+unsigned int
+toint(unsigned char *x, int nbytes)
+{
+	unsigned int rval = 0;
+	int i = 0;
+
+	for (i = 0; i < nbytes; i++) {
+		rval <<= 8;
+		//printk("B: rval=0x%x, x[%d]=0x%x\n", rval, i, x[i]);
+		rval |= x[i];
+		//printk("A: rval=0x%x\n", rval);
+	}			
+	//printk("return 0x%x (sz=%d)\n", rval, nbytes);
+	return rval;
+}
+

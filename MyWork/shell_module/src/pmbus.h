@@ -243,12 +243,11 @@ enum pmbus_registers {
 #define PB_HAS_MFR_INFO            BIT_ULL(50)
 
 
-extern int pmset_page(int, unsigned char);
 extern int pmget_mfr_id(int);
 extern int pmbus_write(int, int, int, unsigned char *);
 extern int pmbus_read(int, int, int, unsigned char *);
-extern unsigned short toshort(unsigned char *);
-extern int pmset_op(int, int, int);
+extern int pmbus_wrblock(int, int, int, unsigned char *);
+extern int pmbus_rdblock(int, int, int, unsigned char *);
 extern double pmread_vout(int, int);
 
 /*
@@ -257,5 +256,48 @@ extern double pmread_vout(int, int);
 #define PM_LINEAR8	0
 #define PM_LINEAR11	1
 #define PM_IOUT		2
+
+/*
+ * voltage rail control
+ */
+extern int vdd_0r6_isgood(char *);
+extern int vdd_0r6_off(char *);
+extern int vdd_0r6_on(char *);
+extern double vdd_0r6_rdvolt(char *);
+extern int vdd_0r85_isgood(char *);
+extern int vdd_0r85_off(char *);
+extern int vdd_0r85_on(char *);
+extern double vdd_0r85_rdvolt(char *);
+extern int vdd_0r9_isgood(char *);
+extern int vdd_0r9_off(char *);
+extern int vdd_0r9_on(char *);
+extern double vdd_0r9_rdvolt(char *);
+extern int vdd_1r0_isgood(char *);
+extern int vdd_1r0_off(char *);
+extern int vdd_1r0_on(char *);
+extern double vdd_1r0_rdvolt(char *);
+extern int vdd_1r2_ddr_isgood(char *);
+extern int vdd_1r2_ddr_off(char *);
+extern int vdd_1r2_ddr_on(char *);
+extern double vdd_1r2_ddr_rdvolt(char *);
+extern int vdd_1r2_mgt_isgood(char *);
+extern int vdd_1r2_mgt_off(char *);
+extern int vdd_1r2_mgt_on(char *);
+extern double vdd_1r2_mgt_rdvolt(char *);
+extern int vdd_1r8_isgood(char *);
+extern int vdd_1r8_off(char *);
+extern int vdd_1r8_on(char *);
+extern double vdd_1r8_rdvolt(char *);
+extern int vdd_2r5_isgood(char *);
+extern int vdd_2r5_off(char *);
+extern int vdd_2r5_on(char *);
+extern double vdd_2r5_rdvolt(char *);
+extern int vdd_3r3_isgood(char *);
+extern int vdd_3r3_off(char *);
+extern int vdd_3r3_on(char *);
+extern double vdd_3r3_rdvolt(char *);
+
+#define POWER_GOOD (1)
+#define POWER_BAD  (0)
 
 #endif /* __PMBUS_H */

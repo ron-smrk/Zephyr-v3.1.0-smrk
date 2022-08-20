@@ -25,6 +25,7 @@ struct gpio {
 };
 
 int gpiobase[] = { 0x40020000, 0x40020400, 0x40020800 };
+char *gpioname[] = {"GPIOA", "GPIOB", "GPIOC"};
 
 void gpio_dump1(int port, int reg)
 {
@@ -56,6 +57,7 @@ int gpio_dump_regs(int port)
 		printk("Bad port %d\n", port);
 		return -1;
 	}
+	printk("%s:\n", gpioname[port]);
 	for (i = 0; i < GPIO_LAST_REG; i++)
 		gpio_dump1(port, i);
 	return 0;
