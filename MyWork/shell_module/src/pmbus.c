@@ -277,40 +277,7 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 	int val = -1;
 	int nrails;
 
-	if (0){
-		int x = 0;
-		while (1) {
-			if (x&1)
-				vdd_1r2_ddr_on("ON!");
-			else
-				vdd_1r2_ddr_off("OFF!");
-			x++;
-		}
-	}
-
-
-	{
-		vdd_1r2_ddr_on("Set 1.2VDD On");
-		int x, val;
-		if (strcmp(argv[1], "0") == 0)
-			val = 0;
-		else
-			val = 1;
-		//x = vdd_1r2_ddr_isgood("PRE");
-		//printk("Before set to %d good=%d\n", val, x);
-		if (val)
-			vdd_1r0_on("ON!");
-		else
-			vdd_1r0_off("OFF!");
-		x = vdd_1r0_isgood("POST");
-		printk("isgood: %d\n", x);
-		printk("readback %.4fV\n", vdd_1r0_rdvolt("Testing"));
-			   
-
-		return 1;
-	}
-		
-	printk("\nSequence\n");
+	printk("\nPower Sequence\n");
 	for (i = 1; i < argc; i++) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
