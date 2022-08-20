@@ -3,6 +3,7 @@
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
+#include <drivers/gpio.h>
 #include <zephyr/zephyr.h>
 #include <zephyr/shell/shell.h>
 
@@ -105,6 +106,19 @@ decode(unsigned short v, int type)
 		printk("Unsupported format\n");
 		return -1;
 	}
+}
+
+double
+get_vout(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+
+	irps_setpage(0x40, (unsigned char)rail);
+	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
+	pmbus_read(0x40, PMBUS_READ_VOUT, 2, id);
+	v = toshort(id);
+	return decode(v, PM_LINEAR8);
 }
 
 /*
@@ -290,6 +304,7 @@ vdd_1r8_on(char *v)
 {
 	if (v)
 		printk("%s on\n", v);
+	irps_setop(0x40, LOOPD, VOLT_ON);
 	return 0;
 }
 int
@@ -297,14 +312,8 @@ vdd_1r8_off(char *v)
 {
 	if (v)
 		printk("%s off\n", v);
+	irps_setop(0x40, LOOPD, VOLT_OFF);
 	return 0;
-}
-int
-vdd_1r8_isgood(char *v)
-{
-	if (v)
-		printk("%s good\n", v);
-	return POWER_GOOD;
 }
 
 double
@@ -312,12 +321,9 @@ vdd_1r8_rdvolt(char *v)
 {
 	if (v)
 		printk("%s rdvolt\n", v);
-	if (vdd_1r8_isgood(NULL))
-		return 1.8;
-	else
-		return 0.0;
+	return get_vout(LOOPD);
 }
-
+/* vdd_1r8_isgood() is in boardctl.c, uses GPIOS.... */
 
 /*
  * VDD_2r5: enable Loop B, PG: PB13, read VOUT
@@ -327,6 +333,7 @@ vdd_2r5_on(char *v)
 {
 	if (v)
 		printk("%s on\n", v);
+	irps_setop(0x40, LOOPB, VOLT_ON);
 	return 0;
 }
 int
@@ -334,25 +341,17 @@ vdd_2r5_off(char *v)
 {
 	if (v)
 		printk("%s off\n", v);
+	irps_setop(0x40, LOOPB, VOLT_OFF);
 	return 0;
 }
-int
-vdd_2r5_isgood(char *v)
-{
-	if (v)
-		printk("%s good\n", v);
-	return POWER_GOOD;
-}
 
+/* vdd_2r5_isgood() is in boardctl.c, uses GPIOS.... */
 double
 vdd_2r5_rdvolt(char *v)
 {
 	if (v)
-		printk("%s: rdvolt\n", v);
-	if (vdd_2r5_isgood(NULL))
-		return 2.5;
-	else
-		return 0.0;
+		printk("%s rdvolt\n", v);
+	return get_vout(LOOPB);
 }
 
 
@@ -364,6 +363,7 @@ vdd_0r9_on(char *v)
 {
 	if (v)
 		printk("%s on\n", v);
+	irps_setop(0x40, LOOPC, VOLT_ON);
 	return 0;
 }
 int
@@ -371,25 +371,19 @@ vdd_0r9_off(char *v)
 {
 	if (v)
 		printk("%s off\n", v);
+	irps_setop(0x40, LOOPC, VOLT_OFF);
 	return 0;
 }
-int
-vdd_0r9_isgood(char *v)
-{
-	if (v)
-		printk("good %s good\n", v);
-	return POWER_GOOD;
-}
+
+/* vdd_0r9_isgood() is in boardctl.c, uses GPIOS.... */
 
 double
 vdd_0r9_rdvolt(char *v)
 {
 	if (v)
-		printk("%s: rdvolt\n", v);
-	if (vdd_0r9_isgood(NULL))
-		return 0.9;
-	else
-		return 0.0;
+		printk("%s rdvolt\n", v);
+
+	return get_vout(LOOPC);
 }
 
 
@@ -401,6 +395,7 @@ vdd_1r0_on(char *v)
 {
 	if (v)
 		printk("%s on\n", v);
+	irps_setop(0x40, LOOPLDO, VOLT_ON);
 	return 0;
 }
 int
@@ -408,24 +403,17 @@ vdd_1r0_off(char *v)
 {
 	if (v)
 		printk("%s off\n", v);
+	irps_setop(0x40, LOOPLDO, VOLT_OFF);
 	return 0;
 }
-int
-vdd_1r0_isgood(char *v)
-{
-	if (v)
-		printk("%s good\n", v);
-	return POWER_GOOD;
-}
 
+/* vdd_1r0_isgood() is in boardctl.c, uses GPIOS.... */
 
 double
 vdd_1r0_rdvolt(char *v)
 {
 	if (v)
-		printk("%s: rdvolt\n", v);
-	if (vdd_1r0_isgood(NULL))
-		return 1.0;
-	else
-		return 0.0;
+		printk("%s rdvolt\n", v);
+
+	return get_vout(LOOPLDO);
 }

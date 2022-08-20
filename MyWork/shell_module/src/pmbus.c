@@ -290,6 +290,7 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 
 
 	{
+		vdd_1r2_ddr_on("Set 1.2VDD On");
 		int x, val;
 		if (strcmp(argv[1], "0") == 0)
 			val = 0;
@@ -298,11 +299,13 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 		//x = vdd_1r2_ddr_isgood("PRE");
 		//printk("Before set to %d good=%d\n", val, x);
 		if (val)
-			vdd_1r2_ddr_on("ON!");
+			vdd_1r0_on("ON!");
 		else
-			vdd_1r2_ddr_off("OFF!");
-		x = vdd_1r2_ddr_isgood("POST");
-		printk("After set to %d good=%d\n", val, x);
+			vdd_1r0_off("OFF!");
+		x = vdd_1r0_isgood("POST");
+		printk("isgood: %d\n", x);
+		printk("readback %.4fV\n", vdd_1r0_rdvolt("Testing"));
+			   
 
 		return 1;
 	}

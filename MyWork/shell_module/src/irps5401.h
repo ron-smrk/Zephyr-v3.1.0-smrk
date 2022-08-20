@@ -15,5 +15,10 @@ enum irps5401_registers {
 	PMBUS_MFR_LDO_MARGIN			= 0xDE, /* R/W word */
 };
 
+#define LOOPA	0
+#define LOOPB	1
+#define LOOPC	2
+#define LOOPD	3
+#define LOOPLDO 4
 
 #endif /* __IRPS5401_H */
