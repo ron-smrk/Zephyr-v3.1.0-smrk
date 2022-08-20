@@ -10,6 +10,9 @@
 char *i2c_dev = 0;
 static int gpios_inited = 0;
 
+#define EN_3R3_NODE	DT_ALIAS(en_3r3)
+static const struct gpio_dt_spec en_3r3 = GPIO_DT_SPEC_GET(EN_3R3_NODE, gpios);
+
 #define EN_0R85_NODE DT_ALIAS(en_0r85)
 static const struct gpio_dt_spec en_0r85 = GPIO_DT_SPEC_GET_OR(EN_0R85_NODE, gpios, {0});
 #define PG_0R85_NODE DT_ALIAS(pg_0r85)
@@ -59,6 +62,8 @@ setup_dev(int func)
 	if (!gpios_inited) {
 		gpios_inited = 1;
 		//gpio_dump_regs(XGPIOA);
+		gpio_pin_configure_dt(&en_3r3, GPIO_OUTPUT);
+
 		gpio_pin_configure_dt(&en_0r85, GPIO_OUTPUT);
 		gpio_pin_configure_dt(&pg_0r85, GPIO_INPUT);
 
@@ -84,31 +89,6 @@ setup_dev(int func)
 }
 
 
-#define VDD_EN_3R3_NODE	DT_ALIAS(en_vdd_3r3)
-static const struct gpio_dt_spec enable_vdd_33 = GPIO_DT_SPEC_GET(VDD_EN_3R3_NODE, gpios);
-
-/*
- * VDD3r3: PA12
- */
-static int
-setup_vdd_3r3()
-{
-	int rval;
-	if (!(rval=device_is_ready(enable_vdd_33.port))) {
-		printk("Not ready Enable VDD 3R3 (%d)\n", rval);
-		return -ENODEV;
-	}
-#if 1
-	if ((rval=gpio_pin_configure_dt(&enable_vdd_33, GPIO_OUTPUT)) < 0) {
-		printk("Enable VDD 3R3 config error: %d\n", rval);
-		return -EIO;
-	}
-#endif
-	//gpio_dump_regs(XGPIOA);
-	return 0;
-}
-
-
 /*
  * VDD_3r3: EN: PA12, PG: PC11
  */
@@ -121,15 +101,12 @@ vdd_3r3_off(char *v)
 		printk("%s off.\n", v);
 		return 0;
 	}
+	if (v)
+		printk("%s on\n", v);
+	rval = gpio_pin_set_dt(&en_3r3, 0);
 
-	rval = setup_vdd_3r3();
-	if (rval == 0) {
-		rval = gpio_pin_set_dt(&enable_vdd_33, 0);
-		// see below..
-		if (v)
-			printk("%s off.\n", v);
-	}
 	return rval;
+
 }
 
 int
@@ -141,18 +118,10 @@ vdd_3r3_on(char *v)
 		printk("%s on\n", v);
 			return 0;
 	}
+	if (v)
+		printk("%s on\n", v);
+	rval = gpio_pin_set_dt(&en_3r3, 1);
 
-	rval = setup_vdd_3r3();
-	if (rval == 0) {
-		//printk("\nEnable 3.3\n");
-		//gpio_dump1(XGPIOA,GPIO_ODR); 
-		rval = gpio_pin_set_dt(&enable_vdd_33, 1);
-		//gpio_dump1(XGPIOA,GPIO_ODR); 
-		// printk("rval=%d\n", rval);
-		// Yes I know this currently won't happen...
-		if (v)
-			printk("%s on\n", v);
-	}
 	return rval;
 }
 

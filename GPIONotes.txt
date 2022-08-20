@@ -1,0 +1,20 @@
+1 - No Power good for 3.3
+  - PG_VDD_3R3 (Page 36) goes nowhere.
+  - There is a line (PG_VDD_0R9_MGTYAVCC, pg42) which goes nowhere, was this supposed
+    to be PG_VDD_3R3?
+
+2 - EN_VDD_0r85 seems to do nothing, ie. no effect (PG_VDD_0R85 doesn't change).
+    Turning rail 0 on/off via PMBus commands does allow OG signal to work.
+
+3 - Xilinx Micro Doc/Schematic Inconsistencies
+  - PA9 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
+  - PA12 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
+    Schematic says (BUILT IN PU)?
+  - PA11 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
+
+4 - Enable 0r6_vtt, maybe add a note saying 1.2_ddr must be on first.
+
+5 - Document-schematic mismatch: VDD_0R9_MGTAVCC_PG in doc, PG_VDD_0R9_MGTACC on
+    schematic, prefer schematic naming as other power good lines start with PG_
+
+

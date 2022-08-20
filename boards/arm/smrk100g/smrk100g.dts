@@ -105,7 +105,7 @@
 	power_control {
 		compatible = "gpio-keys";
 		EN_0R85: en_0r85 {
-			gpios = <&gpioa 15 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			gpios = <&gpioa 15 GPIO_ACTIVE_HIGH>;
 			label = "En0r85";
 		};
 		PG_0R85: pg_0r85 {
@@ -120,17 +120,53 @@
 			gpios = <&gpiob 15 GPIO_ACTIVE_HIGH>;
 			label = "PG1r2_ddr";
 		};
-			
+		EN_0R6: en_0r6 {
+/*			gpios = <&gpioa 10  (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>; */
+			gpios = <&gpioa 10  (GPIO_ACTIVE_HIGH)>;
+			label = "En0r6_ddr";
+		};
+		PG_0R6: pg_0r6 {
+			gpios = <&gpioc 10 GPIO_ACTIVE_HIGH>;
+			label = "PG0r6";
+		};
+
+		EN_1R2_MGT: en_1r2_mgt {
+			gpios = <&gpioa 11 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			label = "En1r2_mgt";
+		};
+		PG_1R2_MGT: pg_1r2_mgt {
+			gpios = <&gpiob 14 GPIO_ACTIVE_HIGH>;
+			label = "PG1r2_mgt";
+		};
+
+		PG_1R8: pg_1r8 {
+			gpios = <&gpioc 8 GPIO_ACTIVE_HIGH>;
+			label = "PG1r8";
+		};
+
+		PG_2R5: pg_2r5 {
+		gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
+			label = "PG2r5";
+		};
+
+		PG_0R9: pg_0r9 {
+		gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+			label = "PG0r9";
+		};
+
+		PG_1R0: pg_1r0 {
+		gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
+			label = "PG1r0";
+		};
+
+
+		EN_3R3: en_3r3 {
+			gpios = <&gpioa 12 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			label = "En3r3";
+		};
+
 	};
  		
-	vdd_3r3_en {
-	       compatible = "gpio-keys";
-	       En3r3: enable_3r3 {
-	       	       gpios = <&gpioa 12 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
-		       label = "En3r3 0";
-		};
-	};
-	
 	aliases {
 		led0 = &orange_led_3;
 		led1 = &green_led_4;
@@ -141,11 +177,19 @@
 		pwm-led2 = &red_pwm_led;
 		pwm-led3 = &blue_pwm_led;
 		rstmux = &RstMux;
-		en-vdd-3r3 = &En3r3;
+		en-3r3 = &EN_3R3;
 		en-0r85 = &EN_0R85;
 		pg-0r85 = &PG_0R85;
 		en-1r2-ddr = &EN_1R2_DDR;
 		pg-1r2-ddr = &PG_1R2_DDR;
+		en-0r6 = &EN_0R6;
+		pg-0r6 = &PG_0R6;
+		en-1r2-mgt = &EN_1R2_MGT;
+		pg-1r2-mgt = &PG_1R2_MGT;
+		pg-1r8 = &PG_1R8;
+		pg-2r5 = &PG_2R5;
+		pg-0r9 = &PG_0R9;
+		pg-1r0 = &PG_1R0;
 		/* 		zephyr-uart_mcumgr = &usart2; */
 	};
 };
