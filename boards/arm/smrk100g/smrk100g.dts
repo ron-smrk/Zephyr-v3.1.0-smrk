@@ -121,7 +121,6 @@
 			label = "PG1r2_ddr";
 		};
 		EN_0R6: en_0r6 {
-/*			gpios = <&gpioa 10  (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>; */
 			gpios = <&gpioa 10  (GPIO_ACTIVE_HIGH)>;
 			label = "En0r6_ddr";
 		};

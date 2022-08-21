@@ -7,14 +7,21 @@
     Turning rail 0 on/off via PMBus commands does allow OG signal to work.
 
 3 - Xilinx Micro Doc/Schematic Inconsistencies
-  - PA9 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
+  - PA9 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup. There is
+    a PU marked NOSTUFF.
+  - PA11 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
   - PA12 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
     Schematic says (BUILT IN PU)?
-  - PA11 says tri-state, PD. There is no PD on schematic. Able to fix by GPIO setup.
 
 4 - Enable 0r6_vtt, maybe add a note saying 1.2_ddr must be on first.
 
 5 - Document-schematic mismatch: VDD_0R9_MGTAVCC_PG in doc, PG_VDD_0R9_MGTACC on
     schematic, prefer schematic naming as other power good lines start with PG_
+
+6 - PMIC_SDA, PMIC_SDL pulled up by VDD_3R3. This is needed to enable 1r8fpga, but 1r8fpga is
+    enabled before 3r3.
+    
+
+
 
 
