@@ -36,7 +36,7 @@ irps_setpage(int addr, unsigned char page)
 /*
  * Mode setting, ON or OFF
  */
-static  int
+int
 irps_setop(int addr, int rail, int mode)
 {
 	unsigned char byte;

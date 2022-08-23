@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include "lib.h"
 #include "pmbus.h"
+#include "vrails.h"
 
 LOG_MODULE_REGISTER(app);
 
@@ -200,8 +201,6 @@ void main(void)
 	setup_dev(DEV_SET);
 	printk("VDD 3.3 on.\n");
 	vdd_3r3_on(NULL);
-
-	
 
 #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_shell_uart), zephyr_cdc_acm_uart)
 	const struct device *dev;

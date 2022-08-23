@@ -24,8 +24,8 @@ struct gpio {
 	  {GPIO_AFRH, "AFRH"}
 };
 
-int gpiobase[] = { 0x40020000, 0x40020400, 0x40020800 };
-char *gpioname[] = {"GPIOA", "GPIOB", "GPIOC"};
+int gpiobase[] = { 0x40020000, 0x40020400, 0x40020800, 0x40020c00, 0x40021000 };
+char *gpioname[] = {"GPIOA", "GPIOB", "GPIOC", "GPIOD", "GPIOE"};
 
 void gpio_dump1(int port, int reg)
 {

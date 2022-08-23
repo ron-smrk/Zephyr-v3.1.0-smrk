@@ -4,6 +4,8 @@
 #define XGPIOA 0
 #define XGPIOB 1
 #define XGPIOC 2
+#define XGPIOD 3
+#define XGPIOE 4
 #define XGPIO_LAST 2
 
 #define GPIO_MODER	0

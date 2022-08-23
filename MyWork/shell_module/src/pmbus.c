@@ -9,6 +9,7 @@
 
 #include "lib.h"
 #include "pmbus.h"
+#include "vrails.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
@@ -253,7 +254,7 @@ struct power_rails {
 	{vdd_3r3_on, vdd_3r3_off, vdd_3r3_isgood, vdd_3r3_rdvolt,
 	 "VDD_3R3"},
 	{vdd_1r2_ddr_on, vdd_1r2_ddr_off, vdd_1r2_ddr_isgood, vdd_1r2_ddr_rdvolt,
-	 "VDD_IR2_DDR"},
+	 "VDD_1R2_DDR"},
 	{vdd_0r6_on, vdd_0r6_off, vdd_0r6_isgood, vdd_0r6_rdvolt,
 	 "VDD_0R6_VTT"},
 	{vdd_2r5_on, vdd_2r5_off, vdd_2r5_isgood, vdd_2r5_rdvolt,
@@ -319,7 +320,36 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 
 	// For now ignore
 	wflg = 0;
-
+#if 1
+//	uint8_t c;
+	if (val == 1) {
+		i = 0;
+		while(i < NUM_RAILS) {
+			vrail_on(i);
+		    vrail_isgood(i);
+			if (n>0)
+				k_sleep(K_MSEC(1000*n));
+			else if (wflg) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i++;
+		}
+	} else {
+		// point to last one
+		i = NUM_RAILS-1;
+		while (i >= 0) {
+			vrail_off(i);
+			if (n>0)
+				k_sleep(K_MSEC(1000*n));
+			else if (wflg) {
+			}
+			i--;
+		}
+	}
+	return 0;
+#else	
 	nrails = sizeof(rails)/sizeof(struct power_rails);
 //	uint8_t c;
 	if (val == 1) {
@@ -349,6 +379,7 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 		}
 	}
 	return 0;
+#endif	
 }
 static int
 pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
