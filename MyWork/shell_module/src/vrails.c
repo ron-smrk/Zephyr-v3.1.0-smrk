@@ -23,15 +23,6 @@ struct VoltRails vrail[] = {
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt}
 };
 
-int tstvr()
-{
-	int i;
-
-	for(i=0; i<NUM_RAILS; i++){
-		printk("rail: %d name: %s, nominal: %.4f\n", i, vrail[i].signame, vrail[i].nominal);
-	}
-}
-
 int
 vrail_on(int rail)
 {
@@ -42,7 +33,7 @@ vrail_on(int rail)
 	} else {
 		printk("unknown on/off!!\n");
 	}
-	
+	return 0;
 }
 
 int
@@ -56,7 +47,7 @@ vrail_off(int rail)
 	} else {
 		printk("unknown on/off!!\n");
 	}
-	
+	return 0;
 }
 
 int
@@ -91,8 +82,9 @@ vrail_rdvolt(int rail)
 	// pmbus read..
 	if (vrail[rail].type & MAX_RD)
 		return vrail[rail].nominal;
-	if (vrail[rail].type & PMBUS_RD)
+	if (vrail[rail].type & PMBUS_RD) {
 		return get_vout(vrail[rail].type & LOOP_MASK);
+	}
 	if (vrail[rail].isgood(rail))
 		return vrail[rail].nominal;
 	else

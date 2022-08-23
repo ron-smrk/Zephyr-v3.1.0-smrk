@@ -22,5 +22,6 @@ enum irps5401_registers {
 #define LOOPLDO 4
 
 extern int irps_setop(int, int, int);
+extern double get_vout(int);
 
 #endif /* __IRPS5401_H */

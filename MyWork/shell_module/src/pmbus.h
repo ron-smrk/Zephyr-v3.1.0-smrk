@@ -257,46 +257,6 @@ extern double pmread_vout(int, int);
 #define PM_LINEAR11	1
 #define PM_IOUT		2
 
-/*
- * voltage rail control
- */
-extern int vdd_0r6_isgood(char *);
-extern int vdd_0r6_off(char *);
-extern int vdd_0r6_on(char *);
-extern double vdd_0r6_rdvolt(char *);
-extern int vdd_0r85_isgood(char *);
-extern int vdd_0r85_off(char *);
-extern int vdd_0r85_on(char *);
-extern double vdd_0r85_rdvolt(char *);
-extern int vdd_0r9_isgood(char *);
-extern int vdd_0r9_off(char *);
-extern int vdd_0r9_on(char *);
-extern double vdd_0r9_rdvolt(char *);
-extern int vdd_1r0_isgood(char *);
-extern int vdd_1r0_off(char *);
-extern int vdd_1r0_on(char *);
-extern double vdd_1r0_rdvolt(char *);
-extern int vdd_1r2_ddr_isgood(char *);
-extern int vdd_1r2_ddr_off(char *);
-extern int vdd_1r2_ddr_on(char *);
-extern double vdd_1r2_ddr_rdvolt(char *);
-extern int vdd_1r2_mgt_isgood(char *);
-extern int vdd_1r2_mgt_off(char *);
-extern int vdd_1r2_mgt_on(char *);
-extern double vdd_1r2_mgt_rdvolt(char *);
-extern int vdd_1r8_isgood(char *);
-extern int vdd_1r8_off(char *);
-extern int vdd_1r8_on(char *);
-extern double vdd_1r8_rdvolt(char *);
-extern int vdd_2r5_isgood(char *);
-extern int vdd_2r5_off(char *);
-extern int vdd_2r5_on(char *);
-extern double vdd_2r5_rdvolt(char *);
-extern int vdd_3r3_isgood(char *);
-extern int vdd_3r3_off(char *);
-extern int vdd_3r3_on(char *);
-extern double vdd_3r3_rdvolt(char *);
-
 #define POWER_GOOD (1)
 #define POWER_BAD  (0)
 

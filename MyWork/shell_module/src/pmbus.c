@@ -240,33 +240,6 @@ pmbus_status(const struct shell *sh, size_t argc, char **argv)
 	printk("\nStatus\n");
 	return 0;
 }
-struct power_rails {
-	int(*on)(char *);
-	int(*off)(char *);
-	int(*isgood)(char *);
-	double(*rdvolt)(char *);
-	char *signal;
-} rails[] = {
-	{vdd_0r85_on, vdd_0r85_off, vdd_0r85_isgood, vdd_0r85_rdvolt,
-	 "VDD_0R85"},
-	{vdd_1r8_on, vdd_1r8_off, vdd_1r8_isgood, vdd_1r8_rdvolt,
-	 "VDD_1R8FPGA"},
-	{vdd_3r3_on, vdd_3r3_off, vdd_3r3_isgood, vdd_3r3_rdvolt,
-	 "VDD_3R3"},
-	{vdd_1r2_ddr_on, vdd_1r2_ddr_off, vdd_1r2_ddr_isgood, vdd_1r2_ddr_rdvolt,
-	 "VDD_1R2_DDR"},
-	{vdd_0r6_on, vdd_0r6_off, vdd_0r6_isgood, vdd_0r6_rdvolt,
-	 "VDD_0R6_VTT"},
-	{vdd_2r5_on, vdd_2r5_off, vdd_2r5_isgood, vdd_2r5_rdvolt,
-	 "VDD_2R5"},
-	{vdd_1r2_mgt_on, vdd_1r2_mgt_off, vdd_1r2_mgt_isgood, vdd_1r2_mgt_rdvolt,
-	 "VDD_1R2_MGTVTT"},
-	{vdd_0r9_on, vdd_0r9_off, vdd_0r9_isgood, vdd_0r9_rdvolt,
-	 "VDD_0R9_MGTAVCC"},
-	{vdd_1r0_on, vdd_1r0_off, vdd_1r0_isgood, vdd_1r0_rdvolt,
-	 "VDD_1R0"},
-};
-
 	
 static int
 pmbus_seq(const struct shell *sh, size_t argc, char **argv)
@@ -276,7 +249,6 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 	int wflg = 0;
 	char *tmp = NULL;
 	int val = -1;
-	int nrails;
 
 	printk("\nPower Sequence\n");
 	for (i = 1; i < argc; i++) {
@@ -320,7 +292,7 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 
 	// For now ignore
 	wflg = 0;
-#if 1
+
 //	uint8_t c;
 	if (val == 1) {
 		i = 0;
@@ -349,50 +321,16 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 		}
 	}
 	return 0;
-#else	
-	nrails = sizeof(rails)/sizeof(struct power_rails);
-//	uint8_t c;
-	if (val == 1) {
-		i = 0;
-		while(i < nrails) {
-			rails[i].on(rails[i].signal);
-		    rails[i].isgood(rails[i].signal);
-			if (n>0)
-				k_sleep(K_MSEC(1000*n));
-			else if (wflg) {
-				//printk("press key to continue: ");
-				//c=console_getchar();
-				//printk("BACK\n");
-			}
-			i++;
-		}
-	} else {
-		// point to last one
-		i = nrails-1;
-		while (i >= 0) {
-			rails[i].off(rails[i].signal);
-			if (n>0)
-				k_sleep(K_MSEC(1000*n));
-			else if (wflg) {
-			}
-			i--;
-		}
-	}
-	return 0;
-#endif	
 }
 static int
 pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
 {
-	int nrails, i;
-	double volts;
+	int i;
 	
 	printk("\nVoltage Rails:\n");
-	nrails = sizeof(rails)/sizeof(struct power_rails);
 	i = 0;
-	while(i < nrails) {
-		volts = rails[i].rdvolt(NULL);
-		printk("%20s: %.4fV\n", rails[i].signal, volts);
+	while(i < NUM_RAILS) {
+		printk("%20s: %.4f\n", vrail[i].signame, vrail_rdvolt(i));
 		i++;
 	}
 	return 0;

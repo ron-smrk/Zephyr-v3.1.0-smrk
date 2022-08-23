@@ -200,7 +200,7 @@ void main(void)
 
 	setup_dev(DEV_SET);
 	printk("VDD 3.3 on.\n");
-	vdd_3r3_on(NULL);
+	vrail_on(VDD_3R3);
 
 #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_shell_uart), zephyr_cdc_acm_uart)
 	const struct device *dev;

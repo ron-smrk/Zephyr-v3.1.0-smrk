@@ -6,7 +6,6 @@
 #include <drivers/gpio.h>
 #include <zephyr/zephyr.h>
 #include <zephyr/shell/shell.h>
-
 #include "lib.h"
 #include "pmbus.h"
 #include "irps5401.h"
@@ -114,11 +113,12 @@ get_vout(int rail)
 	unsigned char id[8];
 	unsigned short v;
 
+	
 	irps_setpage(0x40, (unsigned char)rail);
 	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(0x40, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
-	return decode(v, PM_LINEAR8);
+	return  decode(v, PM_LINEAR8);
 }
 
 /*
@@ -134,7 +134,7 @@ dumpval(int addr, struct pm_list *p)
 	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
-	
+
 	//printk("Got 0x%x for value for %s\n", v, p->name);
 	switch (p->type) {
 	case PM_LINEAR8:
@@ -295,125 +295,3 @@ SHELL_SUBCMD_ADD((irps), help, NULL, "help for irps", irps_help, 1, 0);
 SHELL_SUBCMD_ADD((irps), dump, NULL, "Dump Info", irps_dump, 2, 0);
 //SHELL_CMD_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", NULL);
 SHELL_CMD_ARG_REGISTER(irps, &sub_irps, "IRPS 5401 Commands", irps_main, 1, 3);
-
-/*
- * VDD 1R8, enable: Loop D, PG: PC8, read VOUT
- */
-int
-vdd_1r8_on(char *v)
-{
-	if (v)
-		printk("%s on\n", v);
-	irps_setop(0x40, LOOPD, VOLT_ON);
-	return 0;
-}
-int
-vdd_1r8_off(char *v)
-{
-	if (v)
-		printk("%s off\n", v);
-	irps_setop(0x40, LOOPD, VOLT_OFF);
-	return 0;
-}
-
-double
-vdd_1r8_rdvolt(char *v)
-{
-	if (v)
-		printk("%s rdvolt\n", v);
-	return get_vout(LOOPD);
-}
-/* vdd_1r8_isgood() is in boardctl.c, uses GPIOS.... */
-
-/*
- * VDD_2r5: enable Loop B, PG: PB13, read VOUT
- */
-int
-vdd_2r5_on(char *v)
-{
-	if (v)
-		printk("%s on\n", v);
-	irps_setop(0x40, LOOPB, VOLT_ON);
-	return 0;
-}
-int
-vdd_2r5_off(char *v)
-{
-	if (v)
-		printk("%s off\n", v);
-	irps_setop(0x40, LOOPB, VOLT_OFF);
-	return 0;
-}
-
-/* vdd_2r5_isgood() is in boardctl.c, uses GPIOS.... */
-double
-vdd_2r5_rdvolt(char *v)
-{
-	if (v)
-		printk("%s rdvolt\n", v);
-	return get_vout(LOOPB);
-}
-
-
-/*
- * VDD_0r9: enable Loop C, PG: PC13, read VOUT
- */
-int
-vdd_0r9_on(char *v)
-{
-	if (v)
-		printk("%s on\n", v);
-	irps_setop(0x40, LOOPC, VOLT_ON);
-	return 0;
-}
-int
-vdd_0r9_off(char *v)
-{
-	if (v)
-		printk("%s off\n", v);
-	irps_setop(0x40, LOOPC, VOLT_OFF);
-	return 0;
-}
-
-/* vdd_0r9_isgood() is in boardctl.c, uses GPIOS.... */
-
-double
-vdd_0r9_rdvolt(char *v)
-{
-	if (v)
-		printk("%s rdvolt\n", v);
-
-	return get_vout(LOOPC);
-}
-
-
-/*
- * VDD_1r0: enable Loop LDO, PG: PB12, read VOUT
- */
-int
-vdd_1r0_on(char *v)
-{
-	if (v)
-		printk("%s on\n", v);
-	irps_setop(0x40, LOOPLDO, VOLT_ON);
-	return 0;
-}
-int
-vdd_1r0_off(char *v)
-{
-	if (v)
-		printk("%s off\n", v);
-	irps_setop(0x40, LOOPLDO, VOLT_OFF);
-	return 0;
-}
-
-/* vdd_1r0_isgood() is in boardctl.c, uses GPIOS.... */
-
-double
-vdd_1r0_rdvolt(char *v)
-{
-	if (v)
-		printk("%s rdvolt\n", v);
-
-	return get_vout(LOOPLDO);
-}
