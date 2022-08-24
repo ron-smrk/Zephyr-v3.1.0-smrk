@@ -25,3 +25,13 @@
 
 
 
+-----------------------------------
+
+EN_VDD_1R2_DDR enables MAX chip. Supplies VDD_1R2_DDR.
+pmbus read to get voltage verify PG good set
+PG_VDD_1R2_DDR comes from MAX chip. 
+
+
+EN_VDD_1R2_MGTVTT goes to TPS22990DML, supplies VDD_1R2_MGTVTT
+pmbus read of max, verifies input voltage good combined with PG to vedrify
+PG_VDD_1R2_MGTVTT comes from TPS22990DML

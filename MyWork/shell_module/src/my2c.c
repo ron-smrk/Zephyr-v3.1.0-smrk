@@ -11,6 +11,7 @@
 #include <drivers/gpio.h>
 #include <sys/byteorder.h>
 
+#include "my2c.h"
 #include "lib.h"
 #include "gpio.h"
 static int get_bytes_count_for_hex(int);
@@ -20,6 +21,21 @@ LOG_MODULE_REGISTER(app_test);
 #define MAX_BYTES_FOR_REGISTER_INDEX	4
 #define MAX_I2C_BYTES	16
 
+static int i2c_addresses[] = {
+	[QSFP_BUS] = QSFP_ADDR,
+	[EEP_BUS] = EEP_ADDR,
+	[IRPS_BUS] = IRPS_ADDR,
+	[MAX_BUS] = MAX_ADDR,
+	[EEPROM_BUS] = EEPROM_ADDR,
+	[LED_BUS] = LED_ADDR
+};
+
+int get_i2c_addr(int chip)
+{
+	if (chip > LAST_BUS)
+		return -1;
+	return i2c_addresses[chip];
+}
 
 static int i2c_scan(const struct shell *sh, size_t argc, char **argv)
 {
@@ -159,16 +175,27 @@ reset_mux()
 
 }
 
+static int current_mux = -1;
 int
 set_mux(int busid)
 {
 	int rval;
 	char buf[20];
 	
+	// only write if different.
+	if (current_mux == busid)
+		return 0;
+	
 	if ((rval=reset_mux()) < 0)
 		return rval;
 
+	if ( (busid<0) > (busid>7) ) {
+		printk("Bad BusID: %d\n", busid);
+		return -1;
+	}
+	// printk("SetMux to %d\n", busid);
 	buf[0] = 1<<busid;
+	current_mux = busid;
 	//printk("reset ok, setting bus to %d.\n", busid);
 	i2c_write_bytes(0x74, 0, buf, 1);
 	return 0;

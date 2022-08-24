@@ -1,9 +1,9 @@
 #include <stdlib.h>
 #include <zephyr/shell/shell.h>
 #include <sys/byteorder.h>
+#include "my2c.h"
 
 #include "lib.h"
-#define LED_ADDR 0x43
 
 /*
  * Control individual LEDs (0-7)
@@ -110,7 +110,7 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 #endif
 	
 	/* LED Controller is on I2C Bus 5 */
-	set_mux(5);
+	set_mux(LED_BUS);
 
 	/* Set all pins to output */	
 	buf[0] = 0xff;

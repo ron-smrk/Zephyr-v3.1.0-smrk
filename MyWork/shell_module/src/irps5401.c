@@ -9,23 +9,25 @@
 #include "lib.h"
 #include "pmbus.h"
 #include "irps5401.h"
+#include "vrails.h"
+#include "my2c.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>
 
 int
-irps_setpage(int addr, unsigned char page)
+irps_setpage(int bus, unsigned char page)
 {
 	unsigned char read_page;
 
-	//printk("setting to page %d\n", page);
-	pmbus_write(addr, PMBUS_PAGE, 1, &page);
+	// printk("setting to page %d, bus=%d\n", page, bus);
+	pmbus_write(bus, PMBUS_PAGE, 1, &page);
 
-	pmbus_read(addr, PMBUS_PAGE, 1, &read_page);
+	pmbus_read(bus, PMBUS_PAGE, 1, &read_page);
 
 	if (page != read_page) {
-		printk("Failed to set page to %d (read back %d instead)\n",
-			   page, read_page);
+		printk("bus: %d, Failed to set page to %d (read back %d instead)\n",
+			   bus, page, read_page);
 		return -EIO;
 	}
 	return read_page;
@@ -36,7 +38,7 @@ irps_setpage(int addr, unsigned char page)
  * Mode setting, ON or OFF
  */
 int
-irps_setop(int addr, int rail, int mode)
+irps_setop(int bus, int rail, int mode)
 {
 	unsigned char byte;
 	if (mode == VOLT_ON) {
@@ -47,20 +49,20 @@ irps_setop(int addr, int rail, int mode)
 		printk("Bad mode\n");
 		return -EINVAL;
 	}
-	if (irps_setpage(addr, rail) < 0) {
+	if (irps_setpage(bus, rail) < 0) {
 		printk("Can't set page %d\n", rail);
 		return -EIO;
 	}
-	return pmbus_write(addr, PMBUS_OPERATION, 1, &byte);
+	return pmbus_write(bus, PMBUS_OPERATION, 1, &byte);
 }
 
 static int
-irps_getmfr_id(int addr)
+irps_getmfr_id(int bus)
 {
 	char id[5];
 	int v;
 
-	pmbus_rdblock(addr, PMBUS_MFR_ID, 3, id);
+	pmbus_rdblock(bus, PMBUS_MFR_ID, 3, id);
 	// printk("ID: 0x%x 0x%x 0x%x\n", id[0], id[1], id[2]);
 
 	v = toint(id, 3);
@@ -113,10 +115,18 @@ get_vout(int rail)
 	unsigned char id[8];
 	unsigned short v;
 
-	
-	irps_setpage(0x40, (unsigned char)rail);
+	int bus = get_bus(rail);
+
+	if (bus < 0)
+		return -1.0;
+
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
 	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
-	pmbus_read(0x40, PMBUS_READ_VOUT, 2, id);
+	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
 	return  decode(v, PM_LINEAR8);
 }
@@ -125,12 +135,12 @@ get_vout(int rail)
  * Assume page is set already
  */
 static int
-dumpval(int addr, struct pm_list *p)
+dumpval(int bus, struct pm_list *p)
 {
 	unsigned char id[8];
 	unsigned short v;
 	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
-	pmbus_read(addr, p->command, p->size, id);
+	pmbus_read(bus, p->command, p->size, id);
 	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
@@ -154,17 +164,21 @@ dumpval(int addr, struct pm_list *p)
 }
 
 static int
-dumpall(int addr, int rail)
+dumpall(int rail)
 {
 	struct pm_list *p;
+	int bus = get_bus(rail);
+
+	if (bus < 0)
+		return -EIO;
 	
-	if (irps_setpage(addr, rail) < 0) {
+	if (irps_setpage(bus, rail) < 0) {
 		printk("Can't set page %d\n", rail);
 		return -EIO;
 	}
 	
 	for (p = pm_info; p->name; p++) {
-		dumpval(0x40, p);
+		dumpval(bus, p);
 	}
 	return 0;
 }
@@ -246,7 +260,7 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 	}
 	// printk("rail = %d\n", rail);
 
-	dumpall(0x40, rail);
+	dumpall(rail);
 #if 0
 	double v;
 	v = pmread_vout(0x40, rail);
@@ -276,7 +290,7 @@ irps_main(const struct shell *sh, size_t argc, char **argv)
 		return -1;
 	}
 	printk("\nturning rail %s (%d) %s\n", dev, rail, state);
-	irps_setop(0x40, rail, val);
+	irps_setop(IRPS_BUS, rail, val);
 
 	return 0;
 }

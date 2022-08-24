@@ -8,9 +8,6 @@
 #include "pmbus.h"
 
 
-#define GIN	0xaa
-#define GOUT	0x55
-
 /*
  * gpio pins/loops
  * PMBUS_* use pmbus to enable power good, rd voltage
@@ -19,10 +16,12 @@
 #define PMBUS_EN	(1<<31)
 #define PMBUS_PG	(1<<30)
 #define PMBUS_RD	(1<<29)
-#define MAX_RD		(1<<28)
-#define GPIO_EN		(1<<27)
-#define GPIO_PG		(1<<26)
-#define GPIO_RD		(1<<25)
+#define GPIO_EN		(1<<28)
+#define GPIO_PG		(1<<27)
+#define GPIO_RD		(1<<26)
+#define ISIRPS_CHIP	(1<<25)
+#define ISMAX_CHIP	(1<<24)
+
 #define LOOP_MASK	0xf
 
 enum { VDD_0R85=0, VDD_1R8, VDD_3R3, VDD_1R2_DDR, VDD_0R6, VDD_2R5,
@@ -48,3 +47,5 @@ extern int vrail_on(int);
 extern int vrail_off(int);
 extern int vrail_isgood(int);
 extern double vrail_rdvolt(int);
+extern int get_bus(int);
+

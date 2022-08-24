@@ -48,15 +48,24 @@ smbus_pec(unsigned char crc, const unsigned char *p, int count)
 
 #if 1
 
-int
-pm_rd_common(int addr, int command, int length, unsigned char *data, int blk)
+static int
+pm_rd_common(int bus, int command, int length, unsigned char *data, int blk)
 {
 	int i = 0;
 
 	unsigned char tmp[130];
+	int i2c_addr = get_i2c_addr(bus);
 
-	/* reads return first byte junk??? */
-	i2c_read_bytes(addr, command, tmp, length + blk);
+	set_mux(bus);
+	k_sleep(K_MSEC(1));
+	set_mux(bus);
+
+	if (i2c_read_bytes(i2c_addr, command, tmp, length + blk) < 0) {
+		printk("PMBUS: Read error bus: %d, i2c_addr: 0x%x\n", bus, i2c_addr);
+		return -EIO;
+	}
+			
+	
 #if 0
 	{
 		for (i = 0; i < 4; i++) {
@@ -81,11 +90,14 @@ pm_rd_common(int addr, int command, int length, unsigned char *data, int blk)
 	}
 	return 0;
 }
-int
-pmbus_wr_common(int addr, int command, int length, unsigned char *data, int blk)
+static int
+pmbus_wr_common(int bus, int command, int length, unsigned char *data, int blk)
 {
 	unsigned char sendbuf[131];
-	
+	int i2c_addr = get_i2c_addr(bus);
+
+	set_mux(bus);
+
 	//printk("wr: length=0x%x, blk=%d\n", length, blk);
 	if (blk) {
 		sendbuf[0] = length;
@@ -101,31 +113,31 @@ pmbus_wr_common(int addr, int command, int length, unsigned char *data, int blk)
 	}
 	printk("\n");
 #endif
-	return i2c_write_bytes(addr, command, sendbuf, length);
+	return i2c_write_bytes(i2c_addr, command, sendbuf, length);
 }
 
 
-int pmbus_read(int addr, int command, int length, unsigned char *data)
+int pmbus_read(int pmdev, int command, int length, unsigned char *data)
 {
-	return pm_rd_common(addr, command, length, data, FALSE);
-}
-
-int
-pmbus_rdblock(int addr, int command, int length, unsigned char *data)
-{
-	return pm_rd_common(addr, command, length, data, TRUE);
+	return pm_rd_common(pmdev, command, length, data, FALSE);
 }
 
 int
-pmbus_wrblock(int addr, int command, int length, unsigned char *data)
+pmbus_rdblock(int pmdev, int command, int length, unsigned char *data)
 {
-	return pmbus_wr_common(addr, command, length, data, TRUE);
+	return pm_rd_common(pmdev, command, length, data, TRUE);
 }
 
 int
-pmbus_write(int addr, int command, int length, unsigned char *data)
+pmbus_wrblock(int pmdev, int command, int length, unsigned char *data)
 {
-	return pmbus_wr_common(addr, command, length, data, FALSE);
+	return pmbus_wr_common(pmdev, command, length, data, TRUE);
+}
+
+int
+pmbus_write(int pmdev, int command, int length, unsigned char *data)
+{
+	return pmbus_wr_common(pmdev, command, length, data, FALSE);
 }
 
 #else
