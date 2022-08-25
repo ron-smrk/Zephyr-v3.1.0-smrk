@@ -21,6 +21,7 @@
 #define GPIO_RD		(1<<26)
 #define ISIRPS_CHIP	(1<<25)
 #define ISMAX_CHIP	(1<<24)
+#define DIVBY2		(1<<23)
 
 #define LOOP_MASK	0xf
 

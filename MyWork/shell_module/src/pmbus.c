@@ -338,13 +338,20 @@ static int
 pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
+	char *mod;
 	
-	printk("\nVoltage Rails:\n");
+	
+	printk("\nVoltage Rails: (* - PG signal present)\n");
 	i = 0;
-	while(i < NUM_RAILS) {
-		printk("%20s: %.4f\n", vrail[i].signame, vrail_rdvolt(i));
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V";
+		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
 		i++;
 	}
+
 	return 0;
 }
 

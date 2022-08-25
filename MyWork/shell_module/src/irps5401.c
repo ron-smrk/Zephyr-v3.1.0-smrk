@@ -114,6 +114,7 @@ get_vout(int rail)
 {
 	unsigned char id[8];
 	unsigned short v;
+	double volt;
 
 	int bus = get_bus(rail);
 
@@ -128,7 +129,10 @@ get_vout(int rail)
 	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
-	return  decode(v, PM_LINEAR8);
+	volt =  decode(v, PM_LINEAR8);
+	if (type & DIVBY2)
+		volt /= 2.0;
+	return volt;
 }
 
 /*
