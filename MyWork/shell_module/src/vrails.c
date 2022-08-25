@@ -1,6 +1,7 @@
 #include "vrails.h"
 #include "my2c.h"
 #include "irps5401.h"
+#include "pmbus_cmds.h"
 
 struct VoltRails vrail[] = {
 	[VDD_0R85] = {NULL, NULL, "0R85", 0.85, GPIO_EN|GPIO_PG|GPIO_RD, 
@@ -92,10 +93,10 @@ vrail_rdvolt(int rail)
 		//printk("todo pmbus read here...\n");
 		//return vrail[rail].nominal;
 		//return -9.865;
-		return get_vout(rail);
+		return pmbus_get_vout(rail);
 	}
 	if (vrail[rail].type & PMBUS_RD) {
-		return get_vout(rail);
+		return pmbus_get_vout(rail);
 	}
 	if (vrail[rail].isgood(rail))
 		return vrail[rail].nominal;

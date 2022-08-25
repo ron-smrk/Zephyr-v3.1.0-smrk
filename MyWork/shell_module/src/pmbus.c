@@ -230,11 +230,13 @@ pmbus_rdblock(int addr, int command, int length, unsigned char *data)
  * pm help
  * pm seq [-w|-n [time]] <on|off>
  * pm status
- * pm rdvolt
+ * pm volt
+ * pm amps
+ * pm temp
  */
 
 static int
-pmbus_help(const struct shell *sh, size_t argc, char **argv)
+pmbus_help_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	printk("\nPower Sequencing Options\n");
 	printk("pm seq [-w|-n [time]] <on|off>\n");
@@ -242,19 +244,21 @@ pmbus_help(const struct shell *sh, size_t argc, char **argv)
 	printk("-n SEC - Wait for N seconds between stages\n");
 	printk("on|off - tune power on/off\n");
 	printk("status - status of power management\n");
-	printk("rdvolt - read voltages\n");
+	printk("volt - read voltages\n");
+	printk("amps - read current\n");
+	printk("temp - read temperature\n");
 	return 0;
 }
 
 static int
-pmbus_status(const struct shell *sh, size_t argc, char **argv)
+pmbus_status_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	printk("\nStatus\n");
 	return 0;
 }
 	
 static int
-pmbus_seq(const struct shell *sh, size_t argc, char **argv)
+pmbus_seq_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	int n = -1;
@@ -335,7 +339,7 @@ pmbus_seq(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 static int
-pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
+pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	char *mod;
@@ -354,11 +358,54 @@ pmbus_rdvolt(const struct shell *sh, size_t argc, char **argv)
 
 	return 0;
 }
+static int
+pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	char *mod;
+	
+	
+	printk("\nTemperature:\n");
+	i = 0;
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V";
+		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+		i++;
+	}
+
+	return 0;
+}
+
+static int
+pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	char *mod;
+	
+	// add array of rail which support ioit, loop thru these
+	printk("\Current:\n");
+	i = 0;
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V";
+		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+		i++;
+	}
+
+	return 0;
+}
 
 SHELL_SUBCMD_SET_CREATE(sub_pmbus, (pm));
-SHELL_SUBCMD_ADD((pm), help, NULL, "Help for pmbus commands", pmbus_help, 1, 0);
-SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq, 2, 2);
-SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status, 1, 1);
-SHELL_SUBCMD_ADD((pm), rdvolt, NULL, "Read Voltages", pmbus_rdvolt, 1, 1);
+SHELL_SUBCMD_ADD((pm), help, NULL, "Help for pmbus commands", pmbus_help_cmd, 1, 0);
+SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq_cmd, 2, 2);
+SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), volt, NULL, "Read Voltages", pmbus_volt_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), amps, NULL, "Read Current", pmbus_amps_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), temp, NULL, "Read Temreatures", pmbus_temp_cmd, 1, 1);
 
 SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);
