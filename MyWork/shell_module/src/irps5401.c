@@ -42,13 +42,13 @@ dumpval(int bus, struct pm_list *p)
 {
 	unsigned char id[8];
 	unsigned short v;
-	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
+	printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(bus, p->command, p->size, id);
-	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
+	printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
 
-	//printk("Got 0x%x for value for %s\n", v, p->name);
+	printk("Got 0x%x for value for %s type=%d units=%s\n", v, p->name, p->type, p->units);
 	switch (p->type) {
 	case PM_LINEAR8:
 	case PM_LINEAR11:
@@ -72,14 +72,21 @@ dumpall(int rail)
 	struct pm_list *p;
 	int bus = get_bus(rail);
 
+	printk("dumpall got bus %d\n", bus);
+
+
 	if (bus < 0)
 		return -EIO;
 	
-	if (irps_setpage(bus, rail) < 0) {
-		printk("Can't set page %d\n", rail);
-		return -EIO;
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		if (irps_setpage(bus, (unsigned char)type&LOOP_MASK) < 0) {
+			printk("Can't set page %d\n", rail);
+			return -EIO;
+		}
 	}
-	
+
 	for (p = pm_info; p->name; p++) {
 		dumpval(bus, p);
 	}
@@ -111,22 +118,22 @@ static int getpstate(char *s)
 }
 
 struct mapping looptab[] = {
-	{"0", 0},
-	{"1", 1},
-	{"2", 2},
-	{"3", 3},
-	{"4", 4},
-	{"a", 0},
-	{"b", 1},
-	{"c", 2},
-	{"d", 3},
-	{"ldo", 4},
+	{"0", -2},
+	{"1", VDD_2R5},
+	{"2", VDD_0R9},
+	{"3", VDD_1R8},
+	{"4", VDD_1R0},
+	{"a", -2},
+	{"b", VDD_2R5},
+	{"c", VDD_0R9},
+	{"d", VDD_1R8},
+	{"ldo", VDD_1R0},
 	{"all", -1},
 	{NULL,0}
 };
 
 static int
-getloop(char *s)
+getrail(char *s)
 {
 	return map(s, looptab);
 }
@@ -156,12 +163,12 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 	
 	printk("\nDumping Device %s\n", dev);
 
-	rail = getloop(dev);
+	rail = getrail(dev);
+	printk("rail = %d\n", rail);
 	if (rail < 0) {
 		printk("Bad rail %s\n", dev);
 		return -1;
 	}
-	// printk("rail = %d\n", rail);
 
 	dumpall(rail);
 #if 0
@@ -180,7 +187,8 @@ irps_main(const struct shell *sh, size_t argc, char **argv)
 	char *dev = toLower(argv[1]);
 	char *state = toLower(argv[2]);
 
-	rail = getloop(dev);
+	rail = getrail(dev);
+	printk("irps_main, rail=%d\n", rail);
 	if (rail < 0) {
 		printk("Command error: Bad rail %s\n", dev);
 		return -1;
@@ -193,7 +201,7 @@ irps_main(const struct shell *sh, size_t argc, char **argv)
 		return -1;
 	}
 	printk("\nturning rail %s (%d) %s\n", dev, rail, state);
-	irps_setop(IRPS_BUS, rail, val);
+	irps_setop(IRPS_BUS, vrail[rail].type & LOOP_MASK, val);
 
 	return 0;
 }

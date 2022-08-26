@@ -9,6 +9,7 @@
 
 #include "lib.h"
 #include "pmbus.h"
+#include "pmbus_cmds.h"
 #include "vrails.h"
 #include <errno.h>
 #include <string.h>
@@ -358,42 +359,34 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 
 	return 0;
 }
+
+static int trails[] = {VDD_2R5, VDD_0R9, VDD_1R2_DDR, -1};
 static int
 pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
-	char *mod;
 	
-	
-	printk("\nTemperature:\n");
+	// add array of rail which support ioit, loop thru these
+	printk("\Temperature:\n");
 	i = 0;
-	while (i < NUM_RAILS) {
-		if (vrail[i].type & GPIO_RD)
-			mod = "V*";
-		else
-			mod = "V";
-		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+	while (trails[i] != -1) {
+		printk("%20s: %.4fC\n", vrail[i].signame, pmbus_get_temp(trails[i]));
 		i++;
 	}
 
 	return 0;
 }
 
+static int irails[] = {VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_1R2_MGT, VDD_0R9, VDD_1R0, -1};
 static int
 pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
-	char *mod;
 	
-	// add array of rail which support ioit, loop thru these
 	printk("\Current:\n");
 	i = 0;
-	while (i < NUM_RAILS) {
-		if (vrail[i].type & GPIO_RD)
-			mod = "V*";
-		else
-			mod = "V";
-		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+	while (irails[i] != -1) {
+		printk("%20s: %.4fA\n", vrail[i].signame, pmbus_get_iout(irails[i]));
 		i++;
 	}
 

@@ -11,13 +11,13 @@ struct VoltRails vrail[] = {
 	// VDD_3R3 has no power good signal yet! 
 	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_1R2_DDR] = {NULL, NULL, "1R2_DDR", 1.2, GPIO_EN|GPIO_PG|ISMAX_CHIP,
+	[VDD_1R2_DDR] = {NULL, NULL, "1R2_DDR", 1.2, GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	[VDD_2R5] = {NULL, NULL, "2r5", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_1R2_MGT] = {NULL, NULL, "1R2_MGT", 1.2, GPIO_EN|GPIO_PG|ISMAX_CHIP,
+	[VDD_1R2_MGT] = {NULL, NULL, "1R2_MGT", 1.2, GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	[VDD_0R9] = {NULL, NULL, "0R9", 0.9, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
@@ -87,14 +87,7 @@ double
 vrail_rdvolt(int rail)
 {
 	//printk("Rail = %d, type = 0x%08x\n", rail, vrail[rail].type);
-	// Note 1.2 ddr/mgt can read MAX chip for voltage, handle this...
-	// pmbus read..
-	if (vrail[rail].type & ISMAX_CHIP) {
-		//printk("todo pmbus read here...\n");
-		//return vrail[rail].nominal;
-		//return -9.865;
-		return pmbus_get_vout(rail);
-	}
+
 	if (vrail[rail].type & PMBUS_RD) {
 		return pmbus_get_vout(rail);
 	}

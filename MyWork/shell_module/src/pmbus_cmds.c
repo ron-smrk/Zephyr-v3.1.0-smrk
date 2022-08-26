@@ -8,6 +8,7 @@
 #include <zephyr/shell/shell.h>
 #include "lib.h"
 #include "pmbus.h"
+#include "pmbus_cmds.h"
 #include "irps5401.h"
 #include "vrails.h"
 #include "my2c.h"
@@ -84,6 +85,12 @@ decode(unsigned short v, int type)
 		int exp = (v >> 11) & 0x1f;
 		v = v & 0x7ff;
 		return (v * pow(2, -(exp)));
+	} else if (type == PM_MAX_TEMP) {
+		double i = (double) v;
+		i = i * 10;		// * 10^-r, where r=-1 so 10...
+		i = i - 5887;	// - b, where b=5887
+		i = i / 21.0;	// divided by m, where m is 21.
+		return i;
 	} else {
 		printk("Unsupported format\n");
 		return -1;
@@ -123,6 +130,7 @@ pmbus_get_iout(int rail)
 	unsigned short v;
 
 	int bus = get_bus(rail);
+	// printk("bus=%d\n", bus);
 
 	if (bus < 0)
 		return -1.0;
@@ -134,6 +142,36 @@ pmbus_get_iout(int rail)
 	}
 
 	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
+	//printk("Read I got 0x%x 0x%x\n", id[0], id[1]);
 	v = toshort(id);
 	return decode(v, PM_IOUT);
+}
+
+double
+pmbus_get_temp(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+	int fmt;
+
+	int bus = get_bus(rail);
+	// printk("bus=%d\n", bus);
+
+	if (bus < 0)
+		return -1.0;
+
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+
+	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
+	//printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
+	v = toshort(id);
+	if (vrail[rail].type & ISMAX_CHIP)
+		fmt = PM_MAX_TEMP;
+	else
+		fmt = PM_LINEAR11;
+	return decode(v, fmt);
 }

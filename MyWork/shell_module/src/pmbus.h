@@ -256,6 +256,7 @@ extern double pmread_vout(int, int);
 #define PM_LINEAR8	0
 #define PM_LINEAR11	1
 #define PM_IOUT		2
+#define PM_MAX_TEMP 3
 
 #define POWER_GOOD (1)
 #define POWER_BAD  (0)
