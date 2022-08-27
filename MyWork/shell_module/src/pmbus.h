@@ -249,16 +249,21 @@ extern int pmbus_read(int, int, int, unsigned char *);
 extern int pmbus_wrblock(int, int, int, unsigned char *);
 extern int pmbus_rdblock(int, int, int, unsigned char *);
 extern double pmread_vout(int, int);
+extern int set_vrails(int, int, int);
 
 /*
  * Data encoding types
  */
-#define PM_LINEAR8	0
-#define PM_LINEAR11	1
-#define PM_IOUT		2
-#define PM_MAX_TEMP 3
+#define PM_LINEAR8		0
+#define PM_LINEAR11		1
+#define PM_IOUT			2
+#define PM_MAX_TEMP		3
+#define PM_MAX_CURRENT	4
 
 #define POWER_GOOD (1)
 #define POWER_BAD  (0)
+
+#define POWER_ON	1
+#define POWER_OFF	0
 
 #endif /* __PMBUS_H */

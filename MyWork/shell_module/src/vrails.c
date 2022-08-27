@@ -4,9 +4,9 @@
 #include "pmbus_cmds.h"
 
 struct VoltRails vrail[] = {
-	[VDD_0R85] = {NULL, NULL, "0R85", 0.85, GPIO_EN|GPIO_PG|GPIO_RD, 
+	[VDD_0R85] = {NULL, NULL, "0R85 (Loop A)", 0.85, GPIO_EN|GPIO_PG|GPIO_RD|ISIRPS_CHIP|LOOPA, 
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_1R8] = {NULL, NULL, "1R8", 1.8, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPD|ISIRPS_CHIP,
+	[VDD_1R8] = {NULL, NULL, "1R8 (Loop D)", 1.8, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPD|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	// VDD_3R3 has no power good signal yet! 
 	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD,
@@ -15,13 +15,13 @@ struct VoltRails vrail[] = {
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_2R5] = {NULL, NULL, "2r5", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
+	[VDD_2R5] = {NULL, NULL, "2r5 (Loop B)", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
 	[VDD_1R2_MGT] = {NULL, NULL, "1R2_MGT", 1.2, GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_0R9] = {NULL, NULL, "0R9", 0.9, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP,
+	[VDD_0R9] = {NULL, NULL, "0R9 (Loop C)", 0.9, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt},
-	[VDD_1R0] = {NULL, NULL, "1R0", 1.0,
+	[VDD_1R0] = {NULL, NULL, "1R0 (LDO)", 1.0,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPLDO|ISIRPS_CHIP|DIVBY2,
 		vrail_on, vrail_off, vrail_isgood, vrail_rdvolt}
 };

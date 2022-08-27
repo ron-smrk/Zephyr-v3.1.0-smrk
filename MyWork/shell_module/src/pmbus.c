@@ -257,7 +257,44 @@ pmbus_status_cmd(const struct shell *sh, size_t argc, char **argv)
 	printk("\nStatus\n");
 	return 0;
 }
-	
+
+int
+set_vrails(int sense, int sleep, int wait)
+{
+	printk("setting vrails %s\n", (sense==POWER_ON)?"on":"off");
+	int i;
+	if (sense == POWER_ON) {
+		i = 0;
+		while(i < NUM_RAILS) {
+			vrail_on(i);
+		    vrail_isgood(i);
+			if (sleep > 0)
+				k_sleep(K_MSEC(1000*sleep));
+			else if (wait) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i++;
+		}
+	} else {
+		// point to last one
+		i = NUM_RAILS-1;
+		while (i >= 0) {
+			vrail_off(i);
+			if (sleep > 0)
+				k_sleep(K_MSEC(1000*sleep));
+			else if (wait) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i--;
+		}
+	}
+	return 0;
+}
+
 static int
 pmbus_seq_cmd(const struct shell *sh, size_t argc, char **argv)
 {
@@ -290,9 +327,9 @@ pmbus_seq_cmd(const struct shell *sh, size_t argc, char **argv)
 			tmp = strdup(argv[i]);
 			tmp = toLower(tmp);
 			if (strcmp(tmp, "on") == 0) {
-				val = 1;
+				val = POWER_ON;
 			} else if (strcmp(tmp, "off") == 0) {
-				val = 0;
+				val = POWER_OFF;
 			} else {
 				printk("Bad arg: %s\n", argv[i]);
 				free(tmp);
@@ -309,34 +346,8 @@ pmbus_seq_cmd(const struct shell *sh, size_t argc, char **argv)
 
 	// For now ignore
 	wflg = 0;
+	set_vrails(val, n, wflg);
 
-//	uint8_t c;
-	if (val == 1) {
-		i = 0;
-		while(i < NUM_RAILS) {
-			vrail_on(i);
-		    vrail_isgood(i);
-			if (n>0)
-				k_sleep(K_MSEC(1000*n));
-			else if (wflg) {
-				//printk("press key to continue: ");
-				//c=console_getchar();
-				//printk("BACK\n");
-			}
-			i++;
-		}
-	} else {
-		// point to last one
-		i = NUM_RAILS-1;
-		while (i >= 0) {
-			vrail_off(i);
-			if (n>0)
-				k_sleep(K_MSEC(1000*n));
-			else if (wflg) {
-			}
-			i--;
-		}
-	}
 	return 0;
 }
 static int
@@ -366,27 +377,26 @@ pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	
-	// add array of rail which support ioit, loop thru these
-	printk("\Temperature:\n");
+	printk("\nTemperature:\n");
 	i = 0;
 	while (trails[i] != -1) {
-		printk("%20s: %.4fC\n", vrail[i].signame, pmbus_get_temp(trails[i]));
+		printk("%20s: %.4fC\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
 		i++;
 	}
 
 	return 0;
 }
 
-static int irails[] = {VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_1R2_MGT, VDD_0R9, VDD_1R0, -1};
+static int irails[] = {VDD_0R85, VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_1R2_MGT, VDD_0R9, VDD_1R0, -1};
 static int
 pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	
-	printk("\Current:\n");
+	printk("\nCurrent:\n");
 	i = 0;
 	while (irails[i] != -1) {
-		printk("%20s: %.4fA\n", vrail[i].signame, pmbus_get_iout(irails[i]));
+		printk("%20s: %.4fA\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
 		i++;
 	}
 

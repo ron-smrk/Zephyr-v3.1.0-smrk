@@ -72,6 +72,17 @@ pmbus_getmfr_id(int bus)
 
 }
 
+int twos_5bit(int v)
+{
+	int val;
+
+	if (v == 0)
+		return 0;
+	val = (v ^ 0x1f) + 1;
+	// printf("v= 0x%x, val = 0x%d\n", v, val);
+	return -val;
+}
+
 double
 decode(unsigned short v, int type)
 {
@@ -83,13 +94,23 @@ decode(unsigned short v, int type)
 		return tmp/1000;
 	} else if (type == PM_LINEAR11) {
 		int exp = (v >> 11) & 0x1f;
+		exp = twos_5bit(exp);
 		v = v & 0x7ff;
-		return (v * pow(2, -(exp)));
+		return (v * pow(2, exp));
 	} else if (type == PM_MAX_TEMP) {
 		double i = (double) v;
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
 		i = i - 5887;	// - b, where b=5887
 		i = i / 21.0;	// divided by m, where m is 21.
+		return i;
+	} else if (type == PM_MAX_CURRENT) {
+		double i = (double) v;
+		double temp = pmbus_get_temp(VDD_1R2_DDR);
+		i = i * 10;		// * 10^-r, where r=-1 so 10...
+		i = i - 4845;	// - b, where b=(4976-131)*D, D=vin/vout ~=1.0
+		i = i / 158.61;	// divided by m, where m is 153+5.61*D
+		
+		i = i * (.013 * (temp-50.0));
 		return i;
 	} else {
 		printk("Unsupported format\n");
@@ -128,23 +149,30 @@ pmbus_get_iout(int rail)
 {
 	unsigned char id[8];
 	unsigned short v;
+	int fmt;
 
+	
 	int bus = get_bus(rail);
-	// printk("bus=%d\n", bus);
+	//printk("bus=%d\n", bus);
 
 	if (bus < 0)
 		return -1.0;
 
 	int type = vrail[rail].type;
+	//printk("type=0x%08x\n", type);
 	// only IRPS supports page.
 	if (type & ISIRPS_CHIP) {
 		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
 	}
 
 	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
-	//printk("Read I got 0x%x 0x%x\n", id[0], id[1]);
 	v = toshort(id);
-	return decode(v, PM_IOUT);
+	//printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
+	if (vrail[rail].type & ISMAX_CHIP)
+		fmt = PM_MAX_CURRENT;
+	else
+		fmt = PM_LINEAR11;
+	return decode(v, fmt);
 }
 
 double
