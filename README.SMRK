@@ -106,27 +106,58 @@ git clone git@github.com:ron-smrk/Zephyr-v3.1.0-smrk.git
 west init -l Zephyr-v3.1.0-smrk
 west update
 
-On Board:
-JTAG Connection:
+JTAG Info
 
-1 - N/C
-2 - White
-3 - Black
-4 - Purple
-5 - Gray
-6 - Brown
+STM Board Connection:
+
+1 - N/C     (VCC)
+2 - White   (JTCK/SWCLK)
+3 - Black   (GND)
+4 - Purple  (JTMS/SWDIO)
+5 - Gray    (RESET)
+6 - Brown   (SWO)
 
 6 pin to JTAG connector
 (Looking a bottom)
-
   2  1
   4  3
   6  5
-
 1 - Blue
 2 - Purple
 3 - Gray
 4 - White
 5 - Black
 6 - Brown
+STM ST-LINK-V2 to jtag.
+ RESET - 1   2 - SWDIO
+ GND   - 3   4 - GND
+ SWIM  - 5   6 - SWCLK
+ +3.3V - 7   8 - +3.3V
+ +5V   - 9  10 - +5V
 
+TC2030-IDC
+
+PC Plug            6 Pin Connector (Bottom View)
+
+x 6 4 2            1 3 5
+        x
+x 5 3 1            2 4 6
+
+
+
+J1 (on smrk Board) (TC2030)
+1 - VCC (N/C)
+2 - SWDIO
+3 - RESET
+4 - SWCLK
+5 - GND
+6 - TDO (SWO)
+
+
+JTAG     Devel Board
+SWO   <--> SWO
+RESET <--> RESET
+SWDIO <--> SWDIO
+GND   <--> GND
+SWCLK <--> SWCLK
+VCC(N/C)
