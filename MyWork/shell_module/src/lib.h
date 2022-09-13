@@ -23,6 +23,7 @@ extern unsigned short toshort(unsigned char *);
 extern double mytrunc(double, int);
 
 extern void setup_dev(int);
+extern void setup_pos(void);
 extern int set_mux(int);
 extern int i2c_write_bytes(int, int, char *, int);
 extern int i2c_read_bytes(int, int, char *, int);

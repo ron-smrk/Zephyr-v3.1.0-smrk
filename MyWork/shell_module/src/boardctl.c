@@ -49,6 +49,12 @@ static const struct gpio_dt_spec pg_0r9 = GPIO_DT_SPEC_GET_OR(PG_0R9_NODE, gpios
 #define PG_1R0_NODE DT_ALIAS(pg_1r0)
 static const struct gpio_dt_spec pg_1r0 = GPIO_DT_SPEC_GET_OR(PG_1R0_NODE, gpios, {0});
 
+#define ZYNQ_PS_POR_NODE DT_ALIAS(zynq_ps_por)
+static const struct gpio_dt_spec zynq_por = GPIO_DT_SPEC_GET(ZYNQ_PS_POR_NODE, gpios);
+
+#define ZYNQ_PS_SRST_NODE DT_ALIAS(zynq_ps_srst)
+static const struct gpio_dt_spec zynq_srst = GPIO_DT_SPEC_GET(ZYNQ_PS_SRST_NODE, gpios);
+
 /*
  * if func == DEV_REINIT, reinitialize to default
  */
@@ -112,3 +118,19 @@ setup_dev(int func)
 	}
 }
 
+/*
+ * Not sure if this needs to be setup after pg_r3r enabled, so make sure it is
+ */
+void
+setup_pos()
+{
+	gpio_pin_configure_dt(&zynq_srst, GPIO_OUTPUT);
+	gpio_pin_configure_dt(&zynq_por, GPIO_OUTPUT);
+}
+void
+init_cpu()
+{
+	printk("setting PS bits\n");
+	gpio_pin_set_dt(&zynq_srst, 0);
+	gpio_pin_set_dt(&zynq_por, 0);
+}

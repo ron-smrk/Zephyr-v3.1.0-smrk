@@ -165,7 +165,18 @@
 		};
 
 	};
- 		
+
+	reset_cpu {
+		compatible = "gpio-keys";
+		ZYNQ_PS_POR: zynq_ps_por {
+			gpios = <&gpioc 3 GPIO_ACTIVE_HIGH>;
+			label = "ZynqPsPor";
+		};
+		ZYNQ_PS_SRST: zynq_ps_srst {
+			gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
+			label = "ZynqPsSrst";
+		};
+	};
 	aliases {
 		led0 = &orange_led_3;
 		led1 = &green_led_4;
@@ -189,6 +200,8 @@
 		pg-2r5 = &PG_2R5;
 		pg-0r9 = &PG_0R9;
 		pg-1r0 = &PG_1R0;
+		zynq-ps-por = &ZYNQ_PS_POR;
+		zynq-ps-srst = &ZYNQ_PS_SRST;
 		/* 		zephyr-uart_mcumgr = &usart2; */
 	};
 };
