@@ -176,6 +176,10 @@
 			gpios = <&gpioc 4 GPIO_ACTIVE_HIGH>;
 			label = "ZynqPsSrst";
 		};
+		ZYNQ_PS_PROG: zynq_ps_prog {
+			gpios = <&gpioc 1 GPIO_ACTIVE_HIGH>;
+			label = "ZynqPsProg";
+		};
 	};
 	aliases {
 		led0 = &orange_led_3;
@@ -202,6 +206,7 @@
 		pg-1r0 = &PG_1R0;
 		zynq-ps-por = &ZYNQ_PS_POR;
 		zynq-ps-srst = &ZYNQ_PS_SRST;
+		zynq-ps-prog = &ZYNQ_PS_PROG;
 		/* 		zephyr-uart_mcumgr = &usart2; */
 	};
 };
