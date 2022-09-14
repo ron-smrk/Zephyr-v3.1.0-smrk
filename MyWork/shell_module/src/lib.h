@@ -45,3 +45,6 @@ extern int i2c_read_bytes(int, int, char *, int);
 #define GET_INIT	1
 
 extern void set_ps_bit(int, int);
+extern int get_ps_stat(int);
+extern void init_cpu();
+extern void set_psbits_hi();

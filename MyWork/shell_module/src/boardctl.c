@@ -60,9 +60,13 @@ static const struct gpio_dt_spec zynq_prog = GPIO_DT_SPEC_GET(ZYNQ_PS_PROG_NODE,
 
 
 #define QSFP_RESETL_NODE DT_ALIAS(qsfp_resetl)
+// Remove when used
+__attribute__ ((unused))
 static const struct gpio_dt_spec qsfp_reset = GPIO_DT_SPEC_GET(QSFP_RESETL_NODE, gpios);
 
 #define QSFP_LPMODE_NODE DT_ALIAS(qsfp_lpmode)
+// Remove when used
+__attribute__ ((unused))
 static const struct gpio_dt_spec qsfp_lowpower_mode = GPIO_DT_SPEC_GET(QSFP_LPMODE_NODE, gpios);
 
 #define ZYNQ_PS_INIT_NODE DT_ALIAS(zynq_ps_init)
@@ -141,32 +145,9 @@ setup_dev(int func)
 	}
 }
 
-/*
- * Not sure if this needs to be setup after pg_r3r enabled, so make sure it is
- */
-void
-setup_pos()
-{
-}
-void
-set_por_hi()
-{
-	printk("setting PS bits\n");
-	// Later...
-	// gpio_pin_set_dt(&qsfp_reset, 1);
-	// gpio_pin_set_dt(&qsfp_lowpower_mode, 1);
-
-	
-	gpio_pin_set_dt(&zynq_srst, 1);
-	gpio_pin_set_dt(&zynq_por, 1);
-	gpio_pin_set_dt(&zynq_prog, 1);
-}
-
 void
 init_cpu()
 {
-	printk("setting PS bits\n");
-
 	gpio_pin_set_dt(&zynq_srst, 0);
 	gpio_pin_set_dt(&zynq_por, 0);
 

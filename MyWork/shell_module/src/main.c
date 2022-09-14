@@ -200,10 +200,9 @@ void main(void)
 
 	setup_dev(DEV_SET);
 	//printk("VDD 3.3 on.\n");
-	set_por_hi();
+	set_ps_bit(SET_ALL, 1);
 	//vrail_on(VDD_3R3);
 	set_vrails(POWER_ON, 0, 0);
-	setup_pos();
 	init_cpu();
 
 #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_shell_uart), zephyr_cdc_acm_uart)

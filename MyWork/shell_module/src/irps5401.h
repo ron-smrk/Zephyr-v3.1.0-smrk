@@ -21,4 +21,6 @@ enum irps5401_registers {
 #define LOOPD	3
 #define LOOPLDO 4
 
+extern int irps_setpage(int, unsigned char);
+
 #endif /* __IRPS5401_H */

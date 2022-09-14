@@ -57,6 +57,8 @@ irps_setop(int bus, int rail, int mode)
 	return pmbus_write(bus, PMBUS_OPERATION, 1, &byte);
 }
 
+// Remove when used....
+__attribute__ ((unused))
 static int
 pmbus_getmfr_id(int bus)
 {

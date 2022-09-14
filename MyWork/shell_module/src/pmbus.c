@@ -10,6 +10,7 @@
 #include "lib.h"
 #include "pmbus.h"
 #include "pmbus_cmds.h"
+#include "my2c.h"
 #include "vrails.h"
 #include <errno.h>
 #include <string.h>
@@ -261,7 +262,7 @@ pmbus_status_cmd(const struct shell *sh, size_t argc, char **argv)
 int
 set_vrails(int sense, int sleep, int wait)
 {
-	printk("setting vrails %s\n", (sense==POWER_ON)?"on":"off");
+	printk("\nsetting vrails %s\n", (sense==POWER_ON)?"on":"off");
 	int i;
 	if (sense == POWER_ON) {
 		i = 0;
