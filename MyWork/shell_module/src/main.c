@@ -222,11 +222,12 @@ void main(void)
 #endif
 }
 
-struct pin  {
+struct pin {
 	char *name;		/* name */
 	int cval;		/* current value */
-	int	funct;		/* SET_POR, etc */
-} pintab[] = {
+	int	func;		/* SET_POR, etc */
+};
+struct pin pintab[] = {
 	{"srst", 0, SET_SRST},
 	{"por", 0, SET_POR},
 	{"prog", 0, SET_PROG},
@@ -235,12 +236,12 @@ struct pin  {
 };
 		
 int
-set_cmd(const struct shell *shell, size_t argc,
-                char *argv[])
+set_cmd(const struct shell *shell, size_t argc, char *argv[])
 {
 	int i;
 	if (argc == 1) {
-		for (i = 0; pintab[i].funct != SET_ALL; i++)
+		printk("\n");
+		for (i = 0; pintab[i].func != SET_ALL; i++)
 			printk("%s: %d\n", pintab[i].name, pintab[i].cval);
 		return 0;
 	}
@@ -260,10 +261,10 @@ set_cmd(const struct shell *shell, size_t argc,
 	int match = 0;
 	for (i = 0; pintab[i].name; i++) {
 		if (strcmp(line, pintab[i].name) == 0) {
-			set_ps_bit(pintab[i].funct, val);
-			if (pintab[i].funct == SET_ALL) {
+			set_ps_bit(pintab[i].func, val);
+			if (pintab[i].func == SET_ALL) {
 				int i2;
-				for (i2 = 0; pintab[i2].funct != SET_ALL; i2++) {
+				for (i2 = 0; pintab[i2].func != SET_ALL; i2++) {
 					pintab[i2].cval = val;
 				}
 			} else {
@@ -283,4 +284,48 @@ set_cmd(const struct shell *shell, size_t argc,
 	return -1;
 }
 SHELL_CMD_ARG_REGISTER(set, NULL, "set <LINE> <VAL>", set_cmd, 0, 0);
+
+struct pin status[] = {
+	{"done_b", 0, GET_DONE_B},
+	{"init", 0, GET_INIT},
+	{NULL, 0, 0}
+};
+
+int
+get_cmd(const struct shell *shell, size_t argc, char *argv[])
+{
+	int i;
+
+	if (argc == 1) {
+		printk("\n");
+		for (i = 0; status[i].name; i++)
+			printk("%s: %d\n", status[i].name, get_ps_stat(status[i].func));
+		return 0;
+	}
+	if (argc != 2) {
+		printk("usage get <LINE>\n");
+		return -1;
+	}
+
+	char *line = toLower(argv[1]);
+	int match = 0;
+	for (i = 0; status[i].name; i++) {
+		if (strcmp(line, status[i].name) == 0) {
+			printk("\n%s: %d\n", status[i].name, get_ps_stat(status[i].func));
+			match++;
+		}
+	}
+	if (match)
+		return 0;
+	printk("line must be one of: " );
+	for (i = 0; status[i].name; i++) {
+		printk("%s ", status[i].name);
+	}
+	printk("\n");
+	return -1;
+}
+
+
+
+SHELL_CMD_ARG_REGISTER(get, NULL, "get <LINE>", get_cmd, 0, 0);
 	

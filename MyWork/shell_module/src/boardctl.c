@@ -177,7 +177,6 @@ init_cpu()
 void
 set_ps_bit(int line, int val)
 {
-	printk("set %d to %d\n", line, val);
 	switch(line) {
 	case SET_POR:
 		gpio_pin_set_dt(&zynq_por, val);
@@ -196,4 +195,16 @@ set_ps_bit(int line, int val)
 	default:
 		printk("bad line...\n");
 	}
+}
+
+int get_ps_stat(int line)
+{
+	switch(line) {
+	case GET_DONE_B:
+		return gpio_pin_get_dt(&zynq_done_b);
+	case GET_INIT:
+		return gpio_pin_get_dt(&zynq_init);
+	}
+	printk("OOPS!!!\n");
+	return 0xdeadbeef;
 }

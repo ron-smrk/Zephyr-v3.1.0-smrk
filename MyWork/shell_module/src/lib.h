@@ -41,4 +41,7 @@ extern int i2c_read_bytes(int, int, char *, int);
 #define SET_SRST	1
 #define SET_PROG	2
 
+#define GET_DONE_B	0
+#define GET_INIT	1
+
 extern void set_ps_bit(int, int);
