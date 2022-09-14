@@ -57,6 +57,19 @@ static const struct gpio_dt_spec zynq_srst = GPIO_DT_SPEC_GET(ZYNQ_PS_SRST_NODE,
 
 #define ZYNQ_PS_PROG_NODE DT_ALIAS(zynq_ps_prog)
 static const struct gpio_dt_spec zynq_prog = GPIO_DT_SPEC_GET(ZYNQ_PS_PROG_NODE, gpios);
+
+
+#define QSFP_RESETL_NODE DT_ALIAS(qsfp_resetl)
+static const struct gpio_dt_spec qsfp_reset = GPIO_DT_SPEC_GET(QSFP_RESETL_NODE, gpios);
+
+#define QSFP_LPMODE_NODE DT_ALIAS(qsfp_lpmode)
+static const struct gpio_dt_spec qsfp_lowpower_mode = GPIO_DT_SPEC_GET(QSFP_LPMODE_NODE, gpios);
+
+#define ZYNQ_PS_INIT_NODE DT_ALIAS(zynq_ps_init)
+static const struct gpio_dt_spec zynq_init = GPIO_DT_SPEC_GET(ZYNQ_PS_INIT_NODE, gpios);
+
+#define ZYNQ_PS_DONE_B_NODE DT_ALIAS(zynq_ps_done_b)
+static const struct gpio_dt_spec zynq_done_b = GPIO_DT_SPEC_GET(ZYNQ_PS_DONE_B_NODE, gpios);
 /*
  * if func == DEV_REINIT, reinitialize to default
  */
@@ -113,6 +126,14 @@ setup_dev(int func)
 		gpio_pin_configure_dt(&pg_1r0, GPIO_INPUT);
 		vrail[VDD_1R0].isgood_node = &pg_1r0;
 
+		gpio_pin_configure_dt(&zynq_srst, GPIO_OUTPUT);
+		gpio_pin_configure_dt(&zynq_por, GPIO_OUTPUT);
+		gpio_pin_configure_dt(&zynq_prog, GPIO_OUTPUT);
+		gpio_pin_configure_dt(&qsfp_lowpower_mode, GPIO_OUTPUT);
+
+		gpio_pin_configure_dt(&zynq_init, GPIO_INPUT);
+		gpio_pin_configure_dt(&zynq_done_b, GPIO_INPUT);
+
 //gpio_dump_regs(XGPIOA);
 		//gpio_dump_regs(XGPIOB);
 		//gpio_dump_regs(XGPIOC);
@@ -126,15 +147,47 @@ setup_dev(int func)
 void
 setup_pos()
 {
-	gpio_pin_configure_dt(&zynq_srst, GPIO_OUTPUT);
-	gpio_pin_configure_dt(&zynq_por, GPIO_OUTPUT);
-	gpio_pin_configure_dt(&zynq_prog, GPIO_OUTPUT);
 }
+void
+set_por_hi()
+{
+	printk("setting PS bits\n");
+	// Later...
+	// gpio_pin_set_dt(&qsfp_reset, 1);
+	// gpio_pin_set_dt(&qsfp_lowpower_mode, 1);
+
+	
+	gpio_pin_set_dt(&zynq_srst, 1);
+	gpio_pin_set_dt(&zynq_por, 1);
+	gpio_pin_set_dt(&zynq_prog, 1);
+}
+
 void
 init_cpu()
 {
 	printk("setting PS bits\n");
+
 	gpio_pin_set_dt(&zynq_srst, 0);
 	gpio_pin_set_dt(&zynq_por, 0);
+
+	k_sleep(K_MSEC(1));
 	gpio_pin_set_dt(&zynq_prog, 0);
+}
+
+void
+set_ps_bit(int line, int val)
+{
+	switch(line) {
+	case SET_POR:
+		gpio_pin_set_dt(&zynq_por, val);
+		break;
+	case SET_SRST:
+		gpio_pin_set_dt(&zynq_srst, val);
+		break;
+	case SET_PROG:
+		gpio_pin_set_dt(&zynq_prog, val);
+		break;
+	default:
+		printk("bad line...\n");
+	}
 }

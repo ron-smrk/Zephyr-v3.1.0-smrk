@@ -166,7 +166,7 @@
 
 	};
 
-	reset_cpu {
+	cpu_control {
 		compatible = "gpio-keys";
 		ZYNQ_PS_POR: zynq_ps_por {
 			gpios = <&gpioc 3 GPIO_ACTIVE_HIGH>;
@@ -179,6 +179,22 @@
 		ZYNQ_PS_PROG: zynq_ps_prog {
 			gpios = <&gpioc 1 GPIO_ACTIVE_HIGH>;
 			label = "ZynqPsProg";
+		};
+		QSFP_RESETL: qsfp_resetl {
+			gpios = <&gpiob 0 (GPIO_ACTIVE_LOW | GPIO_PUSH_PULL | GPIO_PULL_UP)>;
+			label = "QsfpResetl";
+		};
+		QSFP_LPMODE: qsfp_lpmode {
+			gpios = <&gpiob 4 (GPIO_ACTIVE_LOW | GPIO_PUSH_PULL | GPIO_PULL_UP)>;
+			label = "QsfpLpmode";
+		};
+		ZYNQ_PS_INIT: zynq_ps_init {
+			gpios = <&gpioc 2 GPIO_ACTIVE_LOW>;
+			label = "ZynqPsInit";
+		};
+		ZYNQ_PS_DONE_B: zynq_ps_done_b {
+			gpios = <&gpioc 0 GPIO_ACTIVE_LOW>;
+			label = "ZynqPsDoneB";
 		};
 	};
 	aliases {
@@ -207,6 +223,10 @@
 		zynq-ps-por = &ZYNQ_PS_POR;
 		zynq-ps-srst = &ZYNQ_PS_SRST;
 		zynq-ps-prog = &ZYNQ_PS_PROG;
+		qsfp-resetl = &QSFP_RESETL;
+		qsfp-lpmode = &QSFP_LPMODE;
+		zynq-ps-init = &ZYNQ_PS_INIT;
+		zynq-ps-done-b = &ZYNQ_PS_DONE_B;
 		/* 		zephyr-uart_mcumgr = &usart2; */
 	};
 };

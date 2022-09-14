@@ -199,8 +199,9 @@ void main(void)
 	printk("\nWelcome to smrk100g");
 
 	setup_dev(DEV_SET);
-	printk("VDD 3.3 on.\n");
-	vrail_on(VDD_3R3);
+	//printk("VDD 3.3 on.\n");
+	set_por_hi();
+	//vrail_on(VDD_3R3);
 	set_vrails(POWER_ON, 0, 0);
 	setup_pos();
 	init_cpu();
@@ -220,3 +221,57 @@ void main(void)
 	}
 #endif
 }
+
+static int srst = -1, por = -1, prog = -1;
+
+int
+set_cmd(const struct shell *shell, size_t argc,
+                char *argv[])
+{
+	int i;
+	if (argc == 1) {
+		printk("SRST=%d, POR=%d, PROG=%d\n", srst, por, prog);
+		return 0;
+	}
+	
+	if (argc != 3) {
+		printk("usage set <LINE> <VALUE>\n");
+		return -1;
+	}
+	char *line = toLower(argv[1]);
+	int v = atoi(argv[2]);
+
+	if ((v < 0) || (v > 1)) {
+		printk("val must be 1 or 0\n");
+		return -1;
+	}
+
+	if (strcmp(line, "all") == 0) {
+		set_ps_bit(SET_SRST, v);
+		set_ps_bit(SET_POR, v);
+		set_ps_bit(SET_PROG, v);
+		srst = v;
+		por = v;
+		prog = v;
+
+	} else if (strcmp(line, "srst") == 0) {
+		set_ps_bit(SET_SRST, v);
+		srst = v;
+	} else if (strcmp(line, "por") == 0) {
+		set_ps_bit(SET_POR, v);
+		por = v;
+	} else if (strcmp(line, "prog") == 0) {
+		set_ps_bit(SET_PROG, v);
+		prog = v;
+	} else {
+		printk("line must one of 'por', 'prog', 'srst', or 'all'\n");
+		return -1;
+	}
+
+	printk("Setting %s to %d\n", line, v);
+	
+	return 0;
+		
+}
+SHELL_CMD_ARG_REGISTER(set, NULL, "set <LINE> <VAL>", set_cmd, 0, 0);
+	
