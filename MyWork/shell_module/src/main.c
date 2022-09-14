@@ -222,15 +222,26 @@ void main(void)
 #endif
 }
 
-static int srst = -1, por = -1, prog = -1;
-
+struct pin  {
+	char *name;		/* name */
+	int cval;		/* current value */
+	int	funct;		/* SET_POR, etc */
+} pintab[] = {
+	{"srst", 0, SET_SRST},
+	{"por", 0, SET_POR},
+	{"prog", 0, SET_PROG},
+	{"all", 0, SET_ALL},
+	{NULL, 0, 0}
+};
+		
 int
 set_cmd(const struct shell *shell, size_t argc,
                 char *argv[])
 {
 	int i;
 	if (argc == 1) {
-		printk("SRST=%d, POR=%d, PROG=%d\n", srst, por, prog);
+		for (i = 0; pintab[i].funct != SET_ALL; i++)
+			printk("%s: %d\n", pintab[i].name, pintab[i].cval);
 		return 0;
 	}
 	
@@ -239,39 +250,37 @@ set_cmd(const struct shell *shell, size_t argc,
 		return -1;
 	}
 	char *line = toLower(argv[1]);
-	int v = atoi(argv[2]);
+	int val = atoi(argv[2]);
 
-	if ((v < 0) || (v > 1)) {
+	if ((val < 0) || (val > 1)) {
 		printk("val must be 1 or 0\n");
 		return -1;
 	}
 
-	if (strcmp(line, "all") == 0) {
-		set_ps_bit(SET_SRST, v);
-		set_ps_bit(SET_POR, v);
-		set_ps_bit(SET_PROG, v);
-		srst = v;
-		por = v;
-		prog = v;
-
-	} else if (strcmp(line, "srst") == 0) {
-		set_ps_bit(SET_SRST, v);
-		srst = v;
-	} else if (strcmp(line, "por") == 0) {
-		set_ps_bit(SET_POR, v);
-		por = v;
-	} else if (strcmp(line, "prog") == 0) {
-		set_ps_bit(SET_PROG, v);
-		prog = v;
-	} else {
-		printk("line must one of 'por', 'prog', 'srst', or 'all'\n");
-		return -1;
+	int match = 0;
+	for (i = 0; pintab[i].name; i++) {
+		if (strcmp(line, pintab[i].name) == 0) {
+			set_ps_bit(pintab[i].funct, val);
+			if (pintab[i].funct == SET_ALL) {
+				int i2;
+				for (i2 = 0; pintab[i2].funct != SET_ALL; i2++) {
+					pintab[i2].cval = val;
+				}
+			} else {
+				pintab[i].cval = val;
+			}
+			match++;
+		}
 	}
+	if (match)
+		return 0;
 
-	printk("Setting %s to %d\n", line, v);
-	
-	return 0;
-		
+	printk("line must one of: ");
+	for (i = 0; pintab[i].name; i++) {
+		printk("%s ", pintab[i].name);
+	}
+	printk("\n");
+	return -1;
 }
 SHELL_CMD_ARG_REGISTER(set, NULL, "set <LINE> <VAL>", set_cmd, 0, 0);
 	

@@ -177,6 +177,7 @@ init_cpu()
 void
 set_ps_bit(int line, int val)
 {
+	printk("set %d to %d\n", line, val);
 	switch(line) {
 	case SET_POR:
 		gpio_pin_set_dt(&zynq_por, val);
@@ -185,6 +186,11 @@ set_ps_bit(int line, int val)
 		gpio_pin_set_dt(&zynq_srst, val);
 		break;
 	case SET_PROG:
+		gpio_pin_set_dt(&zynq_prog, val);
+		break;
+	case SET_ALL:
+		gpio_pin_set_dt(&zynq_srst, val);
+		gpio_pin_set_dt(&zynq_por, val);
 		gpio_pin_set_dt(&zynq_prog, val);
 		break;
 	default:

@@ -36,6 +36,7 @@ extern int i2c_read_bytes(int, int, char *, int);
 #define VOLT_ON		1
 #define  VOLT_OFF	0
 
+#define SET_ALL		-1
 #define SET_POR		0
 #define SET_SRST	1
 #define SET_PROG	2
