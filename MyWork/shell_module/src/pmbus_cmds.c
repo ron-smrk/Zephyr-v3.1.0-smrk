@@ -109,7 +109,6 @@ decode(unsigned short v, int type)
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
 		i = i - 4845;	// - b, where b=(4976-131)*D, D=vin/vout ~=1.0
 		i = i / 158.61;	// divided by m, where m is 153+5.61*D
-		
 		i = i * (.013 * (temp-50.0));
 		return i;
 	} else {
