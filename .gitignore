@@ -6,6 +6,8 @@
 *.pyc
 *.swp
 *.swo
+*.gdb_history
+vivado_*.jou
 *~
 .\#*
 \#*\#

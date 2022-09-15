@@ -158,7 +158,7 @@ void main(void)
 	printk("\nWelcome to smrk100g");
 
 	setup_dev(DEV_SET);
-	enable_vdd_3r3();
+	vdd_3r3_on(1);
 
 #if DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_shell_uart), zephyr_cdc_acm_uart)
 	const struct device *dev;

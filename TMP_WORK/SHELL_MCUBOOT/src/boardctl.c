@@ -31,7 +31,7 @@ setup_vdd_3r3()
 }
 
 int
-disable_vdd_3r3()
+vdd_3r3_off()
 {
 	int rval = setup_vdd_3r3();
 
@@ -41,7 +41,7 @@ disable_vdd_3r3()
 }
 
 int
-enable_vdd_3r3()
+vdd_3r3_on()
 {
 	int rval = setup_vdd_3r3();
 
