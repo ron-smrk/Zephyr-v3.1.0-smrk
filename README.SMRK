@@ -88,15 +88,8 @@ west sign -t imgtool -- --key smrk-key.pem
 west flash --bin-file build/zephyr/zephyr.signed.bin
 
 
-Ver 3.0 (using tarfile)
 
-mkdir Zephy
-cd Zephy
-unzip ../zephyr-zephyr-v3.1.0.zip
-west init -l zephyr-zephyr-v3.1.0
-west update
-
-
+OFFICIAL WAY
 # From git:
 
 
@@ -106,6 +99,23 @@ git clone git@github.com:ron-smrk/Zephyr-v3.1.0-smrk.git
 west init -l Zephyr-v3.1.0-smrk
 west update
 
+
+_______________MCUBOOT______________
+From: /exports/share2/RonWork/Xilinx/STM/ZEPHYR-3.1
+ln -s Zephyr-v3.1.0-smrk zephyr
+west build -b smrk100g -s bootloader/mcuboot/boot/zephyr -d build-mcuboot
+west flash -d build-mcuboot
+
+cd zephyr
+west build -b smrk100g -s samples/hello_world/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
+
+west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
+west flash --hex-file build/zephyr/zephyr.signed.hex 
+
+
+
+
+_____________
 JTAG Info
 
 STM Board Connection:
