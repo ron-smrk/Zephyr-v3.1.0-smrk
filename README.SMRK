@@ -109,6 +109,8 @@ west flash -d build-mcuboot
 cd zephyr
 west build -b smrk100g -s samples/hello_world/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
 
+west build -b smrk100g -s MyWork/shell_module/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y		# for our app..
+
 west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
 west flash --hex-file build/zephyr/zephyr.signed.hex 
 
