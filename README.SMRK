@@ -114,7 +114,12 @@ west build -b smrk100g -s MyWork/shell_module/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
 west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
 west flash --hex-file build/zephyr/zephyr.signed.hex 
 
+new App (flashed in!)
+west build -d new_app -b smrk100g -s MyWork/shell_module/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
+../bootloader/mcuboot/scripts/imgtool.py sign --key ../bootloader/mcuboot/root-rsa-2048.pem --header-size=0x200 --align 8  --version 1.3 --slot-size 0x20000 --pad new_app/zephyr/zephyr.bin signed-new.bin
 
+pyocd flash -a 0x8040000 -t STM32F412xE signed-new.bin
+***Sometimes run 'west flash if above command fails...????****
 
 
 _____________

@@ -14,7 +14,8 @@
                 compatible = "fixed-partitions";
                 #address-cells = <1>;
                 #size-cells = <1>;
-		
+/**************************************
+are these needed??? also, second number is a size, ending address....
 		boot_partition: partition@0 {
 			  label = "mcuboot";
 			  reg = <0x00000000 0x0000C000>; 
@@ -28,19 +29,28 @@
 			  label = "storage";
 			  reg = <0x00010000 0x000200000>; 
 		};
-
+*******************************************/
+		boot_partition: partition@0 {
+			  label = "mcuboot";
+			  reg = <0x00000000 DT_SIZE_K(48)>;
+			  read-only;
+		};
+		user_partition: partition@C000 {
+			label = "user";
+			reg = <0x0000C000 DT_SIZE_K(80)>;
+		};
 		/* image 0 & 1 are for apps */
 		slot0_partition: partition@20000 {
 			  label = "image-0";
-			  reg = <0x00020000 0x000400000>; 
+			  reg = <0x00020000 DT_SIZE_K(128)>;
 		};
 		slot1_partition: partition@40000 {
 			  label = "image-1";
-			  reg = <0x00040000 0x000600000>; 
+			  reg = <0x00040000 DT_SIZE_K(128)>;
 		};
 		scratch_partition: partition@60000 {
 			  label = "image-scratch";
-			  reg = <0x00060000 0x000800000>; 
+			  reg = <0x00060000 DT_SIZE_K(128)>;
 		}; 
 	};
 };
