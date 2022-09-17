@@ -14,3 +14,4 @@
 #define LAST_BUS	LED_BUS
 
 extern int get_i2c_addr(int);
+extern int get_mux();
