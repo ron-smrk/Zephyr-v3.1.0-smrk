@@ -14,30 +14,18 @@
                 compatible = "fixed-partitions";
                 #address-cells = <1>;
                 #size-cells = <1>;
-/**************************************
-are these needed??? also, second number is a size, ending address....
-		boot_partition: partition@0 {
-			  label = "mcuboot";
-			  reg = <0x00000000 0x0000C000>; 
-			  read-only;
-		};
-		sector_3_partition: partition@C000 {
-			  label = "sector3";
-			  reg = <0x0000C000 0x00010000>; 
-		};
-		storage_partition: partition@10000 {
-			  label = "storage";
-			  reg = <0x00010000 0x000200000>; 
-		};
-*******************************************/
-		boot_partition: partition@0 {
+		boot_partition: partition@0 {	/* sectors 0, 1, 2 */
 			  label = "mcuboot";
 			  reg = <0x00000000 DT_SIZE_K(48)>;
 			  read-only;
 		};
-		user_partition: partition@C000 {
-			label = "user";
-			reg = <0x0000C000 DT_SIZE_K(80)>;
+		sector_3_partition: partition@C000 {
+			  label = "sector3";
+			  reg = <0x0000C000 DT_SIZE_K(16)>; 
+		};
+		user_partition: partition@10000 {
+			label = "storage";
+			reg = <0x00010000 DT_SIZE_K(64)>;
 		};
 		/* image 0 & 1 are for apps */
 		slot0_partition: partition@20000 {
@@ -199,11 +187,11 @@ are these needed??? also, second number is a size, ending address....
 			label = "QsfpLpmode";
 		};
 		ZYNQ_PS_INIT: zynq_ps_init {
-			gpios = <&gpioc 2 GPIO_ACTIVE_LOW>;
+			gpios = <&gpioc 2 GPIO_ACTIVE_HIGH>;
 			label = "ZynqPsInit";
 		};
 		ZYNQ_PS_DONE_B: zynq_ps_done_b {
-			gpios = <&gpioc 0 GPIO_ACTIVE_LOW>;
+			gpios = <&gpioc 0 GPIO_ACTIVE_HIGH>;
 			label = "ZynqPsDoneB";
 		};
 	};

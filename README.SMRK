@@ -122,6 +122,11 @@ pyocd flash -a 0x8040000 -t STM32F412xE signed-new.bin
 ***Sometimes run 'west flash if above command fails...????****
 
 
+SMP_SVR APP:
+west build -b smrk100g samples/subsys/mgmt/mcumgr/smp_svr -- -DOVERLAY_CONFIG='overlay-serial.conf;overlay-fs.conf;overlay-shell-mgmt.conf'
+west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
+west flash --hex-file build/zephyr/zephyr.signed.hex 
+
 _____________
 JTAG Info
 
