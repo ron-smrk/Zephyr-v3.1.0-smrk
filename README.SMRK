@@ -127,6 +127,16 @@ west build -b smrk100g samples/subsys/mgmt/mcumgr/smp_svr -- -DOVERLAY_CONFIG='o
 west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
 west flash --hex-file build/zephyr/zephyr.signed.hex 
 
+
+uploading:
+mcumgr -c usb3 image list
+mcumgr -c usb3 image upload signed-new.bin
+mcumgr -c usb3 image list
+mcumgr -c usb3 image test 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
+mcumgr -c usb3 image reset
+mcumgr -c usb3 image list
+mcumgr -c usb3 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
+
 _____________
 JTAG Info
 
@@ -183,3 +193,11 @@ SWDIO <--> SWDIO
 GND   <--> GND
 SWCLK <--> SWCLK
 VCC(N/C)
+
+------------
+Init FTD
+/home/ron/Work/Xilinx/ftx-prog
+ ./ftx_prog --dump --verbose --ignore-crc-error
+ ./ftx_prog --dump  --ignore-crc-error	# write it
+/exports/share2/RonWork/Xilinx/tools/Vivado_Lab/2022.1/Vivado_Lab/2022.1/bin
+-> ./program_ftdi -write   -ftdi FT4232H -vendor "SMRK Labs" -b "smrk100g"  -d "100G" -serial 0abc02

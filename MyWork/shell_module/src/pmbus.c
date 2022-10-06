@@ -410,6 +410,6 @@ SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq_cmd, 2, 2);
 SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status_cmd, 1, 1);
 SHELL_SUBCMD_ADD((pm), volt, NULL, "Read Voltages", pmbus_volt_cmd, 1, 1);
 SHELL_SUBCMD_ADD((pm), amps, NULL, "Read Current", pmbus_amps_cmd, 1, 1);
-SHELL_SUBCMD_ADD((pm), temp, NULL, "Read Temreatures", pmbus_temp_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), temp, NULL, "Read Temperatures", pmbus_temp_cmd, 1, 1);
 
 SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);

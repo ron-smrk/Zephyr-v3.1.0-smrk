@@ -144,4 +144,4 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
-SHELL_CMD_ARG_REGISTER(led, NULL, "Set LEDS", cmd_led, 3, 0);
+SHELL_CMD_ARG_REGISTER(led, NULL, "usage: led [d8|d9|all] [on|off|green|yellow]", cmd_led, 3, 0);
