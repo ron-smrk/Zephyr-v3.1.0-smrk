@@ -148,7 +148,7 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv)
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Zephyr version %s", KERNEL_VERSION_STRING);
+	shell_print(shell, "Version %s", KERNEL_VERSION_STRING);
 
 	return 0;
 }

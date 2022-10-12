@@ -24,10 +24,17 @@ static int cmd_kernel_version(const struct shell *shell,
 	ARG_UNUSED(argc);
 	ARG_UNUSED(argv);
 
-	shell_print(shell, "Zephyr version %d.%d.%d",
+#if 1
+	shell_print(shell, "Version %d.%d.%d",
 		      SYS_KERNEL_VER_MAJOR(version),
 		      SYS_KERNEL_VER_MINOR(version),
 		      SYS_KERNEL_VER_PATCHLEVEL(version));
+#else
+	shell_print(shell, "Zephyr ss version %d.%d.%d",
+		      SYS_KERNEL_VER_MAJOR(version),
+		      SYS_KERNEL_VER_MINOR(version),
+		      SYS_KERNEL_VER_PATCHLEVEL(version));
+#endif
 	return 0;
 }
 

@@ -153,6 +153,14 @@ init_cpu()
 
 	k_sleep(K_MSEC(1));
 	gpio_pin_set_dt(&zynq_prog, 0);
+
+/* needed?? */
+	k_sleep(K_MSEC(1));
+	gpio_pin_set_dt(&zynq_prog, 1);
+
+	k_sleep(K_MSEC(1));
+	gpio_pin_set_dt(&zynq_prog, 0);
+/* ************* */
 }
 
 void
