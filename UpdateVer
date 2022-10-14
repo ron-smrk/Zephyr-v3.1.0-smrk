@@ -1,0 +1,8 @@
+#!/bin/bash
+VER=`git rev-parse --short HEAD`
+
+DATE=`date +"%y-%m-%d %T"`
+#echo $VER
+#echo $DATE
+
+sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER ($DATE)/g"  VERSION
