@@ -1,0 +1,5 @@
+#!/bin/bash
+#echo $PWD
+# update VERSION:EXTRAVERSION when checking in a file
+$PWD/UpdateVer
+git add VERSION
