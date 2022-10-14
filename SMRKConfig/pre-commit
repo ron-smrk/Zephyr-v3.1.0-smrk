@@ -1,5 +1,13 @@
-#!/bin/bash
+#!/bin/bash -v
 #echo $PWD
 # update VERSION:EXTRAVERSION when checking in a file
-$PWD/UpdateVer
+#$PWD/UpdateVer
+#VER=`git rev-parse --short HEAD`
+DATE=`date +"%y-%m-%d %T"`
+#echo $VER
+#echo $DATE
+
+#sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER ($DATE)/g"  VERSION
+sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = GITVER ($DATE)/g"  VERSION
+
 git add VERSION

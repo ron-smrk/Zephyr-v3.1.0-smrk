@@ -1,0 +1,4 @@
+#!/bin/bash -v
+VER=`git rev-parse --short HEAD`
+
+sed -i s/GITVER/$VER/g VERSION
