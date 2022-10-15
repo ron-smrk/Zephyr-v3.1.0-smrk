@@ -12,3 +12,5 @@ echo "$VER" > "$BN"
 
 sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER/g"  VERSION
 
+git add "$BN"
+git add VERSION
