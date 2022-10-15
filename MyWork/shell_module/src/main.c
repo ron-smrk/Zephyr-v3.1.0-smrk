@@ -196,7 +196,7 @@ SHELL_CMD_ARG_REGISTER(pm, &sub_pm, "PMBus Commands", cmd_pmtst, 2, 0);
 #endif 
 void main(void)
 {
-	printk("\nWelcome to smrk100g");
+	printk("\nWelcome to smrk100g (%s)", KERNEL_VERSION_STRING);
 
 	setup_dev(DEV_SET);
 	//printk("VDD 3.3 on.\n");
