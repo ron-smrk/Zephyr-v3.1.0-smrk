@@ -1,13 +1,17 @@
 #!/bin/bash -v
-#echo $PWD
-# update VERSION:EXTRAVERSION when checking in a file
-#$PWD/UpdateVer
-#VER=`git rev-parse --short HEAD`
-DATE=`date +"%y-%m-%d %T"`
-#echo $VER
-#echo $DATE
 
-#sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER ($DATE)/g"  VERSION
-sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = GITVER ($DATE)/g"  VERSION
+VER=`git rev-parse --short HEAD`
+BN="BuildNumber.txt"
+if [ ! -e "$BN" ] ; then
+    echo "1" > "$BN"
+    VER=0
+else
+    VER=`cat $BN`
+fi
 
-git add VERSION
+VER=$((VER + 1))
+echo "$VER" > "$BN"
+
+sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER/g"  VERSION
+
+git add VERSION "$BN"
