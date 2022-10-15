@@ -1,6 +1,4 @@
 #!/bin/bash -v
-
-VER=`git rev-parse --short HEAD`
 BN="BuildNumber.txt"
 if [ ! -e "$BN" ] ; then
     echo "1" > "$BN"
@@ -14,4 +12,3 @@ echo "$VER" > "$BN"
 
 sed -i "s/EXTRAVERSION =.*/EXTRAVERSION = $VER/g"  VERSION
 
-git add VERSION "$BN"
