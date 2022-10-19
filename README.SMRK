@@ -152,6 +152,7 @@ SWCLK <--> SWCLK
 VCC(N/C)
 
 ------------
+Historical now use progftdi script.
 Init FTD
 /home/ron/Work/Xilinx/ftx-prog
  ./ftx_prog --dump --verbose --ignore-crc-error
