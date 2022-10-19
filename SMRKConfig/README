@@ -1,4 +1,7 @@
 copy these files to .git/hooks
 
 pre-commit: update EXTARVERSION every checkin.
+
+# This doesn't work, so don't use it.
 pre-push: add VERSION to the commit before pushing
+
