@@ -14,6 +14,8 @@ pip3 install --user -r zephyr/scripts/requirements.txt
 
 # add git hook to update version at checkin time.
 cp SMRKConfig/pre-commit .git/hooks
+cp SMRKConfig/pre-push .git/hooks
+# make sure they are executable.
 
 Setup:
 # get mcumgr command
