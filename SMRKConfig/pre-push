@@ -1,6 +1,0 @@
-#!/bin/bash -v
-
-git add "$BN"
-git add VERSION
-
-git commit --amend -C HEAD --no-verify

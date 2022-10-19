@@ -1,4 +1,4 @@
-#!/bin/bash -v
+#!/bin/bash
 BN="BuildNumber.txt"
 if [ ! -e "$BN" ] ; then
     echo "1" > "$BN"
