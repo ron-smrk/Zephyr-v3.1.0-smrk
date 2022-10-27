@@ -155,45 +155,6 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv)
 
 SHELL_CMD_ARG_REGISTER(version, NULL, "Show kernel version", cmd_version, 1, 0);
 
-#if 0
-static int cmd_pmtst(const struct shell *shell, size_t argc, char **argv)
-{
-	int pg;
-
-	if (argc < 2)
-		pg = 0;
-	else
-		pg = atoi(argv[1]);
-	
-	shell_print(shell, "Set Page to %d", pg);
-/*	set_mux(2); */
-	pmset_page(0x40, pg);
- 	pmget_mfr_id(0x40);
-#if 0
-	pmset_page(0x40, 0);
-	pmget_mfr_id(0x40);
-	pmset_page(0x40, 1);
-	pmget_mfr_id(0x40);
-	pmset_page(0x40, 2);
-	pmget_mfr_id(0x40);
-	pmset_page(0x40, 3);
-	pmget_mfr_id(0x40);
-	k_sleep(K_MSEC(1000));
-#endif
-	return 0;
-}
-static int pm_setrail(const struct shell *sh, size_t argc, char **argv)
-{
-	char rail[10];
-	if (strlen(argv[1] > 8
-}
-
-SHELL_SUBCMD_SET_CREATE)(sub_pm, (pm));
-SHELL_SUBCMD_ADD((pm), setrail, NULL, "Set Rail (A-D or LDO", pm_setrail, 2, 0);
-
-SHELL_CMD_ARG_REGISTER(pm, &sub_pm, "PMBus Commands", cmd_pmtst, 2, 0);
-
-#endif 
 void main(void)
 {
 	printk("\nWelcome to smrk100g (%s)", KERNEL_VERSION_STRING);
