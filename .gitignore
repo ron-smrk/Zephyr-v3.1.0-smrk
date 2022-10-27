@@ -17,6 +17,8 @@ build*/
 !tests/drivers/build_all
 cscope.*
 .dir
+CMakeCache.txt
+CMakeFiles/
 
 /*.patch
 
