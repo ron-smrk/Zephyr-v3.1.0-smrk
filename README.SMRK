@@ -43,14 +43,26 @@ From: /exports/share2/RonWork/Xilinx/STM/ZEPHYR-3.1
 ln -s Zephyr-v3.1.0-smrk zephyr
 
 1) Build MCUBOOT
-   - in ZEPHYR-3.1 (up one from main zephy directory)
+#####building with new key
+#In ZEPHYR-3.1/bootloader/mcuboot:
+./scripts/imgtool.py  keygen -k smrk-key.pem -t rsa-2048
+## NOTE: key has been created once, dont do this step anymore,
+## instead cp smrk-key.pem from zephyr/smrk-key.pem to bootloader/mcuboot,
+## but menuconfig does need to be done
+cp zephyr/smrk-key.pem bootloader/mcuboot/
+#In ZEPHYR-3.1:
+west build -b smrk100g -t menuconfig -d build-mcuboot bootloader/mcuboot/boot/zephyr/
+search (/) for BOOT_SIGNATURE_KEY_FILE, change to 'smrk-key.pem'
+################
+- in ZEPHYR-3.1 (up one from main zephy directory)
 west build -b smrk100g -s bootloader/mcuboot/boot/zephyr -d build-mcuboot
 west flash -d build-mcuboot
+
 
 2) Build Initial App
 cd zephyr
 west build -b smrk100g MyWork/smp_svr
-west sign -t imgtool -- --key ../bootloader/mcuboot/root-rsa-2048.pem
+west sign -t imgtool -- --key ../bootloader/mcuboot/smrk-key.pem 
 west flash --hex-file build/zephyr/zephyr.signed.hex
 
 3) Build updated App
