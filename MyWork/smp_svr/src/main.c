@@ -80,6 +80,25 @@ static int cmd_version(const struct shell *shell, size_t argc, char **argv)
 
 SHELL_CMD_ARG_REGISTER(version, NULL, "Show kernel version", cmd_version, 1, 0);
 
+void status_poll(void *id, void *unused1, void *unused2)
+{
+	ARG_UNUSED(unused1);
+	ARG_UNUSED(unused2);
+
+	int my_id = POINTER_TO_INT(id);
+
+	while (1) {
+		//printk("Thread %d running\n", my_id);
+		k_msleep(1000);
+	}
+}
+
+#define STACK_SIZE (768 + CONFIG_TEST_EXTRA_STACK_SIZE)
+static K_THREAD_STACK_DEFINE(pmstack, STACK_SIZE);
+static struct k_thread pmpoll;	// Power Management
+#define PRIORITY 0
+static k_tid_t poll_tid;
+
 void main(void)
 {
 	printk("\nWelcome to smrk100g (%s)", KERNEL_VERSION_STRING);
@@ -91,6 +110,11 @@ void main(void)
 	set_vrails(POWER_ON, 0, 0);
 	init_cpu();
 
+	poll_tid = k_thread_create(&pmpoll, &pmstack, STACK_SIZE, status_poll,
+					NULL, NULL, NULL, 0, 0, K_MSEC(1000));
+	/*              p1 p1 p3 PR op delay */
+
+	k_thread_name_set(poll_tid, "Board Status");
 
 	int rc = STATS_INIT_AND_REG(smp_svr_stats, STATS_SIZE_32,
 				    "smp_svr_stats");

@@ -33,12 +33,14 @@ void boot_banner(void)
 		k_busy_wait(CONFIG_BOOT_DELAY * USEC_PER_MSEC);
 	}
 
+/* #define VBANNER "Zephyr OS" */
+#define VBANNER "OS"
 #if defined(CONFIG_BOOT_BANNER)
 #ifdef BUILD_VERSION
-	printk("*** Booting Zephyr OS build %s %s ***\n",
+	printk("*** Booting %s build %s %s ***\n", VBANNER,
 	       STRINGIFY(BUILD_VERSION), BOOT_DELAY_BANNER);
 #else
-	printk("*** Booting Zephyr OS version %s %s ***\n",
+	printk("*** Booting %s version %s %s ***\n", VBANNER,
 	       KERNEL_VERSION_STRING, BOOT_DELAY_BANNER);
 #endif
 #endif
