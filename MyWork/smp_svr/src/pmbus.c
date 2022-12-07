@@ -356,8 +356,14 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	char *mod;
-	
-	
+	int rawmode = 0;
+
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
+
 	printk("\nVoltage Rails: (* - PG signal present)\n");
 	i = 0;
 	while (i < NUM_RAILS) {
@@ -365,7 +371,19 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 			mod = "V*";
 		else
 			mod = "V";
-		printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+		if (rawmode) {
+			int rawval;
+			rawval = vrail_rdvolt_raw(i);
+			if (rawval == 0xffffffff) {
+				printk("%20s: %.4f%s (---)\n",
+					   vrail[i].signame, vrail_rdvolt(i), mod);
+			} else {
+				printk("%20s: %.4f%s  (0x%04x)\n",
+					   vrail[i].signame, vrail_rdvolt(i), mod, rawval);
+			}
+		} else {
+			printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+		}
 		i++;
 	}
 
@@ -377,11 +395,28 @@ static int
 pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
+	int rawmode = 0;
+
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
 	
 	printk("\nTemperature:\n");
 	i = 0;
 	while (trails[i] != -1) {
-		printk("%20s: %.4fC\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
+		if (rawmode) {
+			int rawval;
+			rawval = pmbus_get_temp_raw(trails[i]);
+			if (rawval == 0xffffffff) {
+				printk("%20s: %.4fC (---)\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
+			} else {
+				printk("%20s: %.4fC (0x%04x)\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]), rawval);
+			}
+		} else {
+			printk("%20s: %.4fC\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
+		}
 		i++;
 	}
 
@@ -393,11 +428,28 @@ static int
 pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
+	int rawmode = 0;
+
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
 	
 	printk("\nCurrent:\n");
 	i = 0;
 	while (irails[i] != -1) {
-		printk("%20s: %.4fA\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
+		if (rawmode) {
+			int rawval;
+			rawval = pmbus_get_iout_raw(irails[i]);
+			if (rawval == 0xffffffff) {
+				printk("%20s: %.4fA (---)\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
+			} else {
+				printk("%20s: %.4fA (0x%04x)\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]), rawval);
+			}
+		} else {
+			printk("%20s: %.4fA\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
+		}
 		i++;
 	}
 

@@ -97,6 +97,31 @@ vrail_rdvolt(int rail)
 		return 0.0;
 }
 
+int
+vrail_rdvolt_raw(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+	int bus;
+
+	if (!(vrail[rail].type & PMBUS_RD)) {
+		return 0xffffffff;
+	}
+	bus = get_bus(rail);
+	if (bus >= 0) {
+		int type = vrail[rail].type;
+		// only IRPS supports page.
+		if (type & ISIRPS_CHIP) {
+			irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+		}
+		//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
+		pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
+		v = toshort(id);
+		return v & 0xffff;
+	}
+	return 0xffffffff;
+}
+
 int get_bus(int rail)
 {
 	int typ = vrail[rail].type;

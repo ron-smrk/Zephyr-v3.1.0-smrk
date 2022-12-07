@@ -48,5 +48,6 @@ extern int vrail_on(int);
 extern int vrail_off(int);
 extern int vrail_isgood(int);
 extern double vrail_rdvolt(int);
+extern int vrail_rdvolt_raw(int);
 extern int get_bus(int);
 

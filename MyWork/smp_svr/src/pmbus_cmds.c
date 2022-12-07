@@ -108,6 +108,7 @@ decode(unsigned short v, int type)
 		i = i / 21.0;	// divided by m, where m is 21.
 		return i;
 	} else if (type == PM_MAX_CURRENT) {
+		// printk("MAXcurrent\n");
 		double i = (double) v;
 		double temp = pmbus_get_temp(VDD_1R2_DDR);
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
@@ -142,11 +143,14 @@ pmbus_get_vout(int rail)
 	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
 	if (type & ISMAX_CHIP) {
+		double RFB1 = 1.87 * 1000;
+		double RFB2 = 2.21 * 1000;
 #if 0
 		printk("----id=%x %x %x %x, v = 0x%x---\n",
 			   id[0], id[1], id[2], id[3], v);
 #endif /* max chip seems to report incorrect voltage??? */
-		volt = decode(v, PM_LINEAR8);
+		volt = decode(v, PM_LINEAR9);
+		volt = volt * (1 + (RFB1/RFB2));
 	} else {
 		volt = decode(v, PM_LINEAR8);
 	}
@@ -162,15 +166,14 @@ pmbus_get_iout(int rail)
 	unsigned short v;
 	int fmt;
 
-	
 	int bus = get_bus(rail);
-	//printk("bus=%d\n", bus);
+	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
 
 	if (bus < 0)
 		return -1.0;
 
 	int type = vrail[rail].type;
-	//printk("type=0x%08x\n", type);
+	// printk("type=0x%08x\n", type);
 	// only IRPS supports page.
 	if (type & ISIRPS_CHIP) {
 		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
@@ -178,12 +181,36 @@ pmbus_get_iout(int rail)
 
 	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
 	v = toshort(id);
-	//printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
+	// printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
 	if (vrail[rail].type & ISMAX_CHIP)
 		fmt = PM_MAX_CURRENT;
 	else
 		fmt = PM_LINEAR11;
 	return decode(v, fmt);
+}
+
+int
+pmbus_get_iout_raw(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+
+	int bus = get_bus(rail);
+	// printk("pmbus_get_iout_raw: rail=%d, bus=%d\n", rail, bus);
+
+	if (bus < 0)
+		return 0xffffffff;
+
+	int type = vrail[rail].type;
+	// printk("type=0x%08x\n", type);
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+
+	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
+	v = toshort(id);
+	return v&0xffff;
 }
 
 double
@@ -194,7 +221,7 @@ pmbus_get_temp(int rail)
 	int fmt;
 
 	int bus = get_bus(rail);
-	// printk("bus=%d\n", bus);
+	// printk("pmbus_get_temp: rail=%d, bus=%d\n", rail, bus);
 
 	if (bus < 0)
 		return -1.0;
@@ -206,11 +233,35 @@ pmbus_get_temp(int rail)
 	}
 
 	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
-	//printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
+	// printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
 	v = toshort(id);
 	if (vrail[rail].type & ISMAX_CHIP)
 		fmt = PM_MAX_TEMP;
 	else
 		fmt = PM_LINEAR11;
 	return decode(v, fmt);
+}
+int
+pmbus_get_temp_raw(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+
+	int bus = get_bus(rail);
+	//printk("pmbus_get_temp_raw: rail=%d, bus=%d\n", rail, bus);
+
+	if (bus < 0)
+		return 0xffffffff;
+
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+
+	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
+	//printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
+	v = toshort(id);
+
+	return v & 0xffff;
 }
