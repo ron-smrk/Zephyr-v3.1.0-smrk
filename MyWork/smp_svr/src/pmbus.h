@@ -260,6 +260,7 @@ extern int set_vrails(int, int, int);
 #define PM_IOUT			3
 #define PM_MAX_TEMP		4
 #define PM_MAX_CURRENT	5
+#define PM_MAX_VIN		6
 
 #define POWER_GOOD (1)
 #define POWER_BAD  (0)

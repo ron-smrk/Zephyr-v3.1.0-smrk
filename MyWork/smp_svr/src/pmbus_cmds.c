@@ -108,14 +108,33 @@ decode(unsigned short v, int type)
 		i = i / 21.0;	// divided by m, where m is 21.
 		return i;
 	} else if (type == PM_MAX_CURRENT) {
+		// Formula from MAX AN6140
 		// printk("MAXcurrent\n");
+		double vout = pmbus_get_vout(VDD_1R2_DDR);
+		double vin = pmbus_get_vin(VDD_1R2_DDR);
+		double d = vout/vin;
+
+		// printk("vin = %f, vout = %f\n", vin, vout);
+
+		double b = 4976.0 - (131.0 * d);
+		double m = 153.0 + (5.61 * d);
+		double a = 0.013;
 		double i = (double) v;
 		double temp = pmbus_get_temp(VDD_1R2_DDR);
+
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
-		i = i - 4845;	// - b, where b=(4976-131)*D, D=vin/vout ~=1.0
-		i = i / 158.61;	// divided by m, where m is 153+5.61*D
-		i = i * (.013 * (temp-50.0));
+		i = i - b;
+		i = i / m;
+		i = i + (a * (temp-50.0));
 		return i;
+	} else if (type == PM_MAX_VIN) {
+		// Formula from MAX AN6140
+		// printk("v=%d\n", v);
+		double volt = (double) v;
+		volt *= 100.0;	// 10 ^ (-(-2)) --> 10 ^2 --> 100
+		volt /= 3609.0;
+		//printk("return volt=%f\n", volt);
+		return volt;
 	} else {
 		printk("Unsupported format\n");
 		return -1;
@@ -139,7 +158,6 @@ pmbus_get_vout(int rail)
 	if (type & ISIRPS_CHIP) {
 		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
 	}
-	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
 	if (type & ISMAX_CHIP) {
@@ -148,7 +166,7 @@ pmbus_get_vout(int rail)
 #if 0
 		printk("----id=%x %x %x %x, v = 0x%x---\n",
 			   id[0], id[1], id[2], id[3], v);
-#endif /* max chip seems to report incorrect voltage??? */
+#endif
 		volt = decode(v, PM_LINEAR9);
 		volt = volt * (1 + (RFB1/RFB2));
 	} else {
@@ -160,6 +178,36 @@ pmbus_get_vout(int rail)
 }
 
 double
+pmbus_get_vin(int rail)
+{
+	unsigned char id[8];
+	unsigned short v;
+	double volt;
+
+	int bus = get_bus(rail);
+
+	if (bus < 0)
+		return -1.0;
+
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+	pmbus_read(bus, PMBUS_READ_VIN, 2, id);
+	v = toshort(id);
+	if (type & ISMAX_CHIP) {
+#if 0
+		printk("pm_get_vin: id=%x %x %x %x, v = 0x%x---\n",
+			   id[0], id[1], id[2], id[3], v);
+#endif
+		volt = decode(v, PM_MAX_VIN);
+	} else {
+		volt = decode(v, PM_LINEAR8);
+	}
+	return volt;
+}
+double
 pmbus_get_iout(int rail)
 {
 	unsigned char id[8];
@@ -169,7 +217,7 @@ pmbus_get_iout(int rail)
 	int bus = get_bus(rail);
 	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
 
-	if (bus < 0)
+	if (bus < 0
 		return -1.0;
 
 	int type = vrail[rail].type;
