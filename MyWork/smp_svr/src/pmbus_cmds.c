@@ -217,7 +217,7 @@ pmbus_get_iout(int rail)
 	int bus = get_bus(rail);
 	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
 
-	if (bus < 0
+	if (bus < 0)
 		return -1.0;
 
 	int type = vrail[rail].type;
