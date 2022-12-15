@@ -83,43 +83,20 @@ vrail_isgood(int rail)
 	return POWER_BAD;
 }
 
-double
-vrail_rdvolt(int rail)
+int
+vrail_rdvolt(int rail, struct power_vals *p)
 {
+	int rval = 0;
 	//printk("Rail = %d, type = 0x%08x\n", rail, vrail[rail].type);
 
 	if (vrail[rail].type & PMBUS_RD) {
-		return pmbus_get_vout(rail);
+		return pmbus_get_vout(rail, p);
 	}
 	if (vrail[rail].isgood(rail))
-		return vrail[rail].nominal;
+		p->fval = vrail[rail].nominal;
 	else
-		return 0.0;
-}
-
-int
-vrail_rdvolt_raw(int rail)
-{
-	unsigned char id[8];
-	unsigned short v;
-	int bus;
-
-	if (!(vrail[rail].type & PMBUS_RD)) {
-		return 0xffffffff;
-	}
-	bus = get_bus(rail);
-	if (bus >= 0) {
-		int type = vrail[rail].type;
-		// only IRPS supports page.
-		if (type & ISIRPS_CHIP) {
-			irps_setpage(bus, (unsigned char)type&LOOP_MASK);
-		}
-		//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
-		pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
-		v = toshort(id);
-		return v & 0xffff;
-	}
-	return 0xffffffff;
+		rval = -1;
+	return rval;
 }
 
 int get_bus(int rail)

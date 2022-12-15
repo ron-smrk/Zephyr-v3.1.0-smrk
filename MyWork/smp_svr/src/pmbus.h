@@ -268,4 +268,13 @@ extern int set_vrails(int, int, int);
 #define POWER_ON	1
 #define POWER_OFF	0
 
+/*
+ * Appropriate val filled in depending on desired type
+ */
+struct power_vals {
+	double	fval;
+	unsigned short	sval;
+	int		ival;
+};
+
 #endif /* __PMBUS_H */

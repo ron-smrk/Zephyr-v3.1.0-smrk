@@ -40,14 +40,13 @@ struct VoltRails {
 	int	(*on)(int);		// Enable/Turn on
 	int (*off)(int);		// Disable/Turn off
 	int	(*isgood)(int);	// Is Voltage good
-	double (*rdvolt)(int);	// readback Voltage
+	int (*rdvolt)(int, struct power_vals *);	// readback Voltage
 };
 
 extern struct VoltRails vrail[];
 extern int vrail_on(int);
 extern int vrail_off(int);
 extern int vrail_isgood(int);
-extern double vrail_rdvolt(int);
-extern int vrail_rdvolt_raw(int);
+extern int vrail_rdvolt(int, struct power_vals *);
 extern int get_bus(int);
 

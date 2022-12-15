@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 /* is PEC supported */
 // #define PEC 1	/* To turn on */
@@ -357,7 +358,10 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 	int i;
 	char *mod;
 	int rawmode = 0;
-
+	struct power_vals pwr;
+	int rval;
+	char v[20], r[20];
+	
 	if (argc > 1) {
 		if (strcmp(argv[1], "-r") == 0) {
 			rawmode = 1;
@@ -370,23 +374,25 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 		if (vrail[i].type & GPIO_RD)
 			mod = "V*";
 		else
-			mod = "V";
-		if (rawmode) {
-			int rawval;
-			rawval = vrail_rdvolt_raw(i);
-			if (rawval == 0xffffffff) {
-				printk("%20s: %.4f%s (---)\n",
-					   vrail[i].signame, vrail_rdvolt(i), mod);
-			} else {
-				printk("%20s: %.4f%s  (0x%04x)\n",
-					   vrail[i].signame, vrail_rdvolt(i), mod, rawval);
-			}
+			mod = "V ";
+		rval = vrail_rdvolt(i, &pwr);
+		if (rval < 0) {
+			sprintf(v, "????????");
+			sprintf(r, "---");
 		} else {
-			printk("%20s: %.4f%s\n", vrail[i].signame, vrail_rdvolt(i), mod);
+			sprintf(v, "%.4f%s", pwr.fval, mod);
+			if (vrail[i].type & PMBUS_RD)
+				sprintf(r, "(0x%x)", pwr.sval);
+			else
+				sprintf(r, "(---)");
+				
 		}
+		printk("%20s: %s", vrail[i].signame, v);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
 		i++;
 	}
-
 	return 0;
 }
 
@@ -396,7 +402,10 @@ pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	int rawmode = 0;
-
+	struct power_vals pwr;
+	int rval;
+	char temp[20], r[20];
+	
 	if (argc > 1) {
 		if (strcmp(argv[1], "-r") == 0) {
 			rawmode = 1;
@@ -406,20 +415,20 @@ pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 	printk("\nTemperature:\n");
 	i = 0;
 	while (trails[i] != -1) {
-		if (rawmode) {
-			int rawval;
-			rawval = pmbus_get_temp_raw(trails[i]);
-			if (rawval == 0xffffffff) {
-				printk("%20s: %.4fC (---)\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
-			} else {
-				printk("%20s: %.4fC (0x%04x)\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]), rawval);
-			}
+		rval =  pmbus_get_temp(trails[i], &pwr);
+		if (rval < 0) {
+			sprintf(temp, "????????");
+			sprintf(r, "---");
 		} else {
-			printk("%20s: %.4fC\n", vrail[trails[i]].signame, pmbus_get_temp(trails[i]));
+			sprintf(temp, "%.4fC", pwr.fval);
+			sprintf(r, "(0x%x)", pwr.sval);
 		}
+		printk("%20s: %s", vrail[trails[i]].signame, temp);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
 		i++;
 	}
-
 	return 0;
 }
 
@@ -429,6 +438,9 @@ pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
 	int rawmode = 0;
+	struct power_vals pwr;
+	char amps[20], r[20];
+	int rval;
 
 	if (argc > 1) {
 		if (strcmp(argv[1], "-r") == 0) {
@@ -439,17 +451,18 @@ pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 	printk("\nCurrent:\n");
 	i = 0;
 	while (irails[i] != -1) {
-		if (rawmode) {
-			int rawval;
-			rawval = pmbus_get_iout_raw(irails[i]);
-			if (rawval == 0xffffffff) {
-				printk("%20s: %.4fA (---)\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
-			} else {
-				printk("%20s: %.4fA (0x%04x)\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]), rawval);
-			}
+		rval = pmbus_get_iout(irails[i], &pwr);
+		if (rval < 0) {
+			sprintf(amps, "????");
+			sprintf(r, "(---)");
 		} else {
-			printk("%20s: %.4fA\n", vrail[irails[i]].signame, pmbus_get_iout(irails[i]));
+			sprintf(amps, "%.4fA", pwr.fval);
+			sprintf(r, "(0x%x)", pwr.sval);
 		}
+		printk("%20s: %s", vrail[irails[i]].signame, amps);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
 		i++;
 	}
 

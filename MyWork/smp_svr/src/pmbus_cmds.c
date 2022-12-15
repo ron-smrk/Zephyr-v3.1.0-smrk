@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 int
 irps_setpage(int bus, unsigned char page)
@@ -108,10 +109,18 @@ decode(unsigned short v, int type)
 		i = i / 21.0;	// divided by m, where m is 21.
 		return i;
 	} else if (type == PM_MAX_CURRENT) {
+		struct power_vals pwr;
+		
 		// Formula from MAX AN6140
 		// printk("MAXcurrent\n");
-		double vout = pmbus_get_vout(VDD_1R2_DDR);
-		double vin = pmbus_get_vin(VDD_1R2_DDR);
+		double vout;
+		double vin;
+
+		pmbus_get_vout(VDD_1R2_DDR, &pwr);
+		vout = pwr.fval;
+		
+		pmbus_get_vin(VDD_1R2_DDR, &pwr);
+		vin = pwr.fval;
 		double d = vout/vin;
 
 		// printk("vin = %f, vout = %f\n", vin, vout);
@@ -120,7 +129,8 @@ decode(unsigned short v, int type)
 		double m = 153.0 + (5.61 * d);
 		double a = 0.013;
 		double i = (double) v;
-		double temp = pmbus_get_temp(VDD_1R2_DDR);
+		pmbus_get_temp(VDD_1R2_DDR, &pwr);
+		double temp = pwr.fval;
 
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
 		i = i - b;
@@ -141,17 +151,20 @@ decode(unsigned short v, int type)
 	}
 }
 
-double
-pmbus_get_vout(int rail)
+int
+pmbus_get_vout(int rail, struct power_vals *pwr)
 {
 	unsigned char id[8];
 	unsigned short v;
 	double volt;
 
+	memset(&pwr, sizeof(struct power_vals), 0);
 	int bus = get_bus(rail);
 
-	if (bus < 0)
-		return -1.0;
+	if (bus < 0) {
+		// printk("pmbus_get_vout: Ret err\n");
+		return -1;
+	}
 
 	int type = vrail[rail].type;
 	// only IRPS supports page.
@@ -160,6 +173,7 @@ pmbus_get_vout(int rail)
 	}
 	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
 	v = toshort(id);
+	pwr->sval = v & 0xffff;
 	if (type & ISMAX_CHIP) {
 		double RFB1 = 1.87 * 1000;
 		double RFB2 = 2.21 * 1000;
@@ -174,20 +188,24 @@ pmbus_get_vout(int rail)
 	}
 	if (type & DIVBY2)
 		volt /= 2.0;
-	return volt;
+	pwr->fval = volt;
+
+	//printk("volt=%f\n", volt);
+	//printk("Returning volt=%f\n", pwr->fval);
+	return 0;
 }
 
-double
-pmbus_get_vin(int rail)
+int
+pmbus_get_vin(int rail, struct power_vals *pwr)
 {
 	unsigned char id[8];
 	unsigned short v;
-	double volt;
 
+	memset(&pwr, sizeof(struct power_vals), 0);
 	int bus = get_bus(rail);
 
 	if (bus < 0)
-		return -1.0;
+		return -1;
 
 	int type = vrail[rail].type;
 	// only IRPS supports page.
@@ -196,29 +214,32 @@ pmbus_get_vin(int rail)
 	}
 	pmbus_read(bus, PMBUS_READ_VIN, 2, id);
 	v = toshort(id);
+	pwr->sval = v & 0xffff;
 	if (type & ISMAX_CHIP) {
 #if 0
 		printk("pm_get_vin: id=%x %x %x %x, v = 0x%x---\n",
 			   id[0], id[1], id[2], id[3], v);
 #endif
-		volt = decode(v, PM_MAX_VIN);
+		pwr->fval = decode(v, PM_MAX_VIN);
 	} else {
-		volt = decode(v, PM_LINEAR8);
+		pwr->fval = decode(v, PM_LINEAR8);
 	}
-	return volt;
+	return 0;
 }
-double
-pmbus_get_iout(int rail)
+
+int
+pmbus_get_iout(int rail, struct power_vals *pwr)
 {
 	unsigned char id[8];
 	unsigned short v;
 	int fmt;
 
+	memset(&pwr, sizeof(struct power_vals), 0);
 	int bus = get_bus(rail);
 	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
 
 	if (bus < 0)
-		return -1.0;
+		return -1;
 
 	int type = vrail[rail].type;
 	// printk("type=0x%08x\n", type);
@@ -229,50 +250,30 @@ pmbus_get_iout(int rail)
 
 	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
 	v = toshort(id);
+	pwr->sval = v & 0xffff;
 	// printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
 	if (vrail[rail].type & ISMAX_CHIP)
 		fmt = PM_MAX_CURRENT;
 	else
 		fmt = PM_LINEAR11;
-	return decode(v, fmt);
+	pwr->fval = decode(v, fmt);
+	// printk("get_iout return %f\n", pwr->fval);
+	return 0;
 }
 
 int
-pmbus_get_iout_raw(int rail)
-{
-	unsigned char id[8];
-	unsigned short v;
-
-	int bus = get_bus(rail);
-	// printk("pmbus_get_iout_raw: rail=%d, bus=%d\n", rail, bus);
-
-	if (bus < 0)
-		return 0xffffffff;
-
-	int type = vrail[rail].type;
-	// printk("type=0x%08x\n", type);
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
-	}
-
-	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
-	v = toshort(id);
-	return v&0xffff;
-}
-
-double
-pmbus_get_temp(int rail)
+pmbus_get_temp(int rail, struct power_vals *pwr)
 {
 	unsigned char id[8];
 	unsigned short v;
 	int fmt;
 
+	memset(&pwr, sizeof(struct power_vals), 0);
 	int bus = get_bus(rail);
 	// printk("pmbus_get_temp: rail=%d, bus=%d\n", rail, bus);
 
 	if (bus < 0)
-		return -1.0;
+		return -1;
 
 	int type = vrail[rail].type;
 	// only IRPS supports page.
@@ -283,33 +284,11 @@ pmbus_get_temp(int rail)
 	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
 	// printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
 	v = toshort(id);
+	pwr->sval = v & 0xffff;
 	if (vrail[rail].type & ISMAX_CHIP)
 		fmt = PM_MAX_TEMP;
 	else
 		fmt = PM_LINEAR11;
-	return decode(v, fmt);
-}
-int
-pmbus_get_temp_raw(int rail)
-{
-	unsigned char id[8];
-	unsigned short v;
-
-	int bus = get_bus(rail);
-	//printk("pmbus_get_temp_raw: rail=%d, bus=%d\n", rail, bus);
-
-	if (bus < 0)
-		return 0xffffffff;
-
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
-	}
-
-	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
-	//printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-
-	return v & 0xffff;
+	pwr->fval = decode(v, fmt);
+	return 0;
 }
