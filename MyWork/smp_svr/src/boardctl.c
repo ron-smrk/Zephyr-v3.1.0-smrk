@@ -145,22 +145,29 @@ setup_dev(int func)
 	}
 }
 
+/*
+ * Sundar email - 1/10/23
+ * deassert zynq_ps_prog (set PC1 to '0'')
+ * deassert zynq_ps_srst (set PC3 to '0')
+ * assert zynq_ps_por (set PC4 to '1')
+ * After power is up.
+ * deassert zynq_ps_por (set PC3 to '0')
+ */
 void
-init_cpu()
+start_cpu()
 {
+	gpio_pin_set_dt(&zynq_prog, 0);
 	gpio_pin_set_dt(&zynq_srst, 0);
+	gpio_pin_set_dt(&zynq_por, 1);
+	printk("setting prog=0, stst=0, por=1\n");
+
+	set_vrails(POWER_ON, 0, 0);
+
+	k_sleep(K_MSEC(10));
+
 	gpio_pin_set_dt(&zynq_por, 0);
+	printk("setting por=0\n");
 
-	k_sleep(K_MSEC(1));
-	gpio_pin_set_dt(&zynq_prog, 0);
-
-/* needed?? */
-	k_sleep(K_MSEC(1));
-	gpio_pin_set_dt(&zynq_prog, 1);
-
-	k_sleep(K_MSEC(1));
-	gpio_pin_set_dt(&zynq_prog, 0);
-/* ************* */
 }
 
 void

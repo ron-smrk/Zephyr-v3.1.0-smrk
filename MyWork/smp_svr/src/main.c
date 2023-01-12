@@ -104,11 +104,8 @@ void main(void)
 	printk("\nWelcome to smrk100g (%s)", KERNEL_VERSION_STRING);
 
 	setup_dev(DEV_SET);
-	//printk("VDD 3.3 on.\n");
-	set_ps_bit(SET_ALL, 1);
-	//vrail_on(VDD_3R3);
-	set_vrails(POWER_ON, 0, 0);
-	init_cpu();
+
+	start_cpu(); // Bring up CPU
 
 	poll_tid = k_thread_create(&pmpoll, &pmstack, STACK_SIZE, status_poll,
 					NULL, NULL, NULL, 0, 0, K_MSEC(1000));
