@@ -75,7 +75,7 @@ mcumgr -c usb2 image list
 mcumgr -c usb2 image upload signed-new.bin
 mcumgr -c usb2 image list
 mcumgr -c usb2 image test 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
-mcumgr -c usb2  reset
+mcumgr -c usb2 reset
 mcumgr -c usb2 image list
 mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
 
