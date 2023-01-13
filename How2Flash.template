@@ -1,0 +1,11 @@
+mcumgr -c usb2 image list
+mcumgr -c usb2 image upload signed-++VER++.bin
+mcumgr -c usb2 image list
+mcumgr -c usb2 image test <hex-image-hash>
+mcumgr -c usb2  reset
+mcumgr -c usb2 image list
+mcumgr -c usb2 image confirm <hex-image-hash>
+
+Where <hex-image-hash> is displayed by the list command.
+
+
