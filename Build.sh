@@ -60,12 +60,14 @@ MCUMGR=`which mcumgr`
 MDIR=`dirname $MCUMGR`
 #echo $FILELIST $MDIR
 TARFILE="Rel-"${VER}".tgz"
+TV=""
 if [ "$R" -eq 1 ] ; then
     if [ "$V" -eq 1 ] ; then
         set -x
+        TV="v"
     fi
-    tar -cf "$TARFILE" $FILELIST
-    tar -C "$MDIR" -rf "$TARFILE" mcumgr
+    tar -c"$TV"f "$TARFILE" $FILELIST
+    tar -C "$MDIR" -r"$TV"f "$TARFILE" mcumgr
     set +x
 
 fi
