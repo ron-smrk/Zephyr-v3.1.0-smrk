@@ -65,8 +65,8 @@ if [ "$R" -eq 1 ] ; then
         set -x
     fi
     tar -cf "$TARFILE" $FILELIST
-
-    CURRDIR=`pwd`
     tar -C "$MDIR" -rf "$TARFILE" mcumgr
+    set +x
+
 fi
 /bin/rm -f How2Flash.txt
