@@ -8,7 +8,9 @@
 *.swo
 *.gdb_history
 vivado_*.jou
-signed-new.bin
+signed-*.bin
+Rel*.tgz
+KEY/
 *~
 .\#*
 \#*\#
