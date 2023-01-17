@@ -159,14 +159,14 @@ start_cpu()
 	gpio_pin_set_dt(&zynq_prog, 0);
 	gpio_pin_set_dt(&zynq_srst, 0);
 	gpio_pin_set_dt(&zynq_por, 1);
-	printk("setting prog=0, stst=0, por=1\n");
+	//printk("setting prog=0, stst=0, por=1\n");
 
 	set_vrails(POWER_ON, 0, 0);
 
 	k_sleep(K_MSEC(10));
 
 	gpio_pin_set_dt(&zynq_por, 0);
-	printk("setting por=0\n");
+	//printk("setting por=0\n");
 
 }
 

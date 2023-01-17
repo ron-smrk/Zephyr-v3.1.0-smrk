@@ -247,9 +247,10 @@ pmbus_help_cmd(const struct shell *sh, size_t argc, char **argv)
 	printk("-n SEC - Wait for N seconds between stages\n");
 	printk("on|off - tune power on/off\n");
 	printk("status - status of power management\n");
-	printk("volt - read voltages\n");
-	printk("amps - read current\n");
-	printk("temp - read temperature\n");
+	printk("pow[er] - Display power info\n");
+	printk("volt - Display Voltages\n");
+	printk("amps - Display Current\n");
+	printk("temp - Display Temperature\n");
 	return 0;
 }
 
@@ -285,8 +286,7 @@ set_vrails(int sense, int sleep, int wait)
 		while (i >= 0) {
 			vrail_off(i);
 			if (sleep > 0)
-				k_sleep(K_MSEC(1000*sleep));
-			else if (wait) {
+				k_sleep(K_MSEC(1000*sleep));			else if (wait) {
 				//printk("press key to continue: ");
 				//c=console_getchar();
 				//printk("BACK\n");
@@ -368,7 +368,7 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 		}
 	}
 
-	printk("\nVoltage Rails: (* - PG signal present)\n");
+	printk("\nVoltage Rails: (* - Use PG signal to determine voltage)\n");
 	i = 0;
 	while (i < NUM_RAILS) {
 		if (vrail[i].type & GPIO_RD)
@@ -393,6 +393,64 @@ pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
 		printk("\n");
 		i++;
 	}
+	return 0;
+}
+
+static int
+pmbus_pwr_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	char *mod;
+	struct power_vals pwr;
+	int rval;
+	char v[20], a[20], w[20], *pg;
+	double twatts = 0; // Total power (watts)
+	double amps, volts, watts; 
+	
+	printk("Voltage Rails: (* - Use PG signal to determine voltage)\n");
+	printk("                Rail  Volts       Amps      PG  Watts\n");
+	i = 0;
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V ";
+		rval = vrail_rdvolt(i, &pwr);
+		if (rval < 0) {
+			sprintf(v, "????????");
+			volts = -1.0;
+		} else {
+			sprintf(v, "%.4f%s", pwr.fval, mod);
+			volts = pwr.fval;
+		}
+		rval = pmbus_get_iout(i, &pwr);
+		if (rval < 0) {
+			sprintf(a, "???????");
+			amps = -1.0;
+		} else {
+			sprintf(a, "%.4fA", pwr.fval);
+			amps = pwr.fval;
+		}
+		watts = amps * volts;
+		if (watts >= 0.0) {
+			twatts = twatts + watts;
+			sprintf(w, "%.4fW", watts);
+		} else {
+			sprintf(w, "???????");
+		}
+		if ( (rval=vrail_isgood(i)) < 0)
+			pg = "?";
+		else if (rval == POWER_GOOD)
+			pg = "T";
+		else
+			pg = "F";
+			   
+			
+		printk("%20s: %s    %s   %s   %s\n", vrail[i].signame, v, a, pg, w);
+		i++;
+	}
+	sprintf(w, "%.4f Watts", twatts);
+	printk("                                   Total Power %s\n", w);
 	return 0;
 }
 
@@ -473,8 +531,9 @@ SHELL_SUBCMD_SET_CREATE(sub_pmbus, (pm));
 SHELL_SUBCMD_ADD((pm), help, NULL, "Help for pmbus commands", pmbus_help_cmd, 1, 0);
 SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq_cmd, 2, 2);
 SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status_cmd, 1, 1);
-SHELL_SUBCMD_ADD((pm), volt, NULL, "Read Voltages", pmbus_volt_cmd, 1, 1);
-SHELL_SUBCMD_ADD((pm), amps, NULL, "Read Current", pmbus_amps_cmd, 1, 1);
-SHELL_SUBCMD_ADD((pm), temp, NULL, "Read Temperatures", pmbus_temp_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), pwr, NULL, "Display Power Information", pmbus_pwr_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), volt, NULL, "Display Voltages", pmbus_volt_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), amps, NULL, "Display Current", pmbus_amps_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), temp, NULL, "Display Temperatures", pmbus_temp_cmd, 1, 1);
 
 SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);
