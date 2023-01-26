@@ -121,8 +121,6 @@ setup_dev(int func)
 		
 		gpio_pin_configure_dt(&en_1r2_mgt, GPIO_OUTPUT);	
 		gpio_pin_configure_dt(&pg_1r2_mgt, GPIO_INPUT);
-		vrail[VDD_1R2_MGT].enable_node = &en_1r2_mgt;
-		vrail[VDD_1R2_MGT].isgood_node = &pg_1r2_mgt;
 
 		gpio_pin_configure_dt(&pg_0r9, GPIO_INPUT);
 		vrail[VDD_0R9].isgood_node = &pg_0r9;

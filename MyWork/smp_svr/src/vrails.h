@@ -26,10 +26,8 @@
 #define LOOP_MASK	0xf
 
 enum { VDD_0R85=0, VDD_1R8, VDD_3R3, VDD_1R2_DDR, VDD_0R6, VDD_2R5,
-	VDD_1R2_MGT, VDD_0R9, VDD_1R0,
+	VDD_0R9, VDD_1R0,
 	NUM_RAILS };
-
-
 
 struct VoltRails {
 	const struct gpio_dt_spec	*enable_node;

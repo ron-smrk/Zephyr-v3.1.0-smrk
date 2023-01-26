@@ -490,7 +490,7 @@ pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
 	return 0;
 }
 
-static int irails[] = {VDD_0R85, VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_1R2_MGT, VDD_0R9, VDD_1R0, -1};
+static int irails[] = {VDD_0R85, VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_0R9, VDD_1R0, -1};
 static int
 pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
