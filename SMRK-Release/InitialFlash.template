@@ -1,0 +1,8 @@
+Flash image for Flash Image Version: ++VER++
+
+Note: openocd must be in $PATH
+
+Program to flash bootloader and Application.
+
+Usage: ./FlashCMD.sh
+

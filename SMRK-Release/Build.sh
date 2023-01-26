@@ -30,7 +30,7 @@ while getopts 'brvV:' opt; do
             VER=${OPTARG}
             ;;
         ?|h)
-            echo "Usage $(basename $0) [-b] [-v] [-V Version]"
+            echo "Usage $(basename $0) [-b] [-r] [-v] [-V Version]"
             exit 1
             ;;
     esac
