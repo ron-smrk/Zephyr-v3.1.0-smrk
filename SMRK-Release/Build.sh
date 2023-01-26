@@ -54,7 +54,7 @@ if [ "$B" -eq 1 ] ; then
     set +x
 fi
 
-sed "s/++VER++/$VER/" < How2Flash.template > How2Flash.txt
+sed "s/++VER++/$VER/" < SMRK-Release/How2Flash.template > How2Flash.txt
 FILELIST="signed-${VER}.bin How2Flash.txt"
 MCUMGR=`which mcumgr`
 MDIR=`dirname $MCUMGR`
