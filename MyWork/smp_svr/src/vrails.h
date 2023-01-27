@@ -34,17 +34,19 @@ struct VoltRails {
 	const struct gpio_dt_spec	*isgood_node;
 	char *signame;
 	double nominal;
-	int type;		// gpio pin or pmbus command
+	int type;			// gpio pin or pmbus command
 	int	(*on)(int);		// Enable/Turn on
-	int (*off)(int);		// Disable/Turn off
-	int	(*isgood)(int);	// Is Voltage good
+	int (*off)(int);	// Disable/Turn off
+	int	(*waitpg)(int);	// Wait for Voltage good
+	int (*pg)(int);		// return POWER_GOOD or POWER_BAD
 	int (*rdvolt)(int, struct power_vals *);	// readback Voltage
 };
 
 extern struct VoltRails vrail[];
 extern int vrail_on(int);
 extern int vrail_off(int);
-extern int vrail_isgood(int);
+extern int vrail_wait_pg(int);
+extern int vrail_pg(int);
 extern int vrail_rdvolt(int, struct power_vals *);
 extern int get_bus(int);
 

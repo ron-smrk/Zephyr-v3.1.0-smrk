@@ -270,7 +270,7 @@ set_vrails(int sense, int sleep, int wait)
 		i = 0;
 		while(i < NUM_RAILS) {
 			vrail_on(i);
-		    vrail_isgood(i);
+		    vrail_wait_pg(i);	// wait for PG....
 			if (sleep > 0)
 				k_sleep(K_MSEC(1000*sleep));
 			else if (wait) {
@@ -438,7 +438,7 @@ pmbus_pwr_cmd(const struct shell *sh, size_t argc, char **argv)
 		} else {
 			sprintf(w, "???????");
 		}
-		if ( (rval=vrail_isgood(i)) < 0)
+		if ( (rval=vrail_pg(i)) < 0)
 			pg = "?";
 		else if (rval == POWER_GOOD)
 			pg = "T";
