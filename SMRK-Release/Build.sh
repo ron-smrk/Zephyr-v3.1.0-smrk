@@ -55,6 +55,12 @@ if [ "$B" -eq 1 ] ; then
 fi
 
 sed "s/++VER++/$VER/" < SMRK-Release/How2Flash.template > How2Flash.txt
+HASH=`python3 SMRK-Release/analyze-mcuboot-img.py "signed-${VER}.bin" | sed '6q;d' | sed 's/ //g'`
+echo HASH=$HASH
+sed -i "s/++HASH++/$HASH/" How2Flash.txt
+
+
+
 FILELIST="signed-${VER}.bin How2Flash.txt"
 MCUMGR=`which mcumgr`
 MDIR=`dirname $MCUMGR`
