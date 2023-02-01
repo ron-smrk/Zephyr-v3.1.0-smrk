@@ -142,17 +142,17 @@
 		};
 
 		PG_2R5: pg_2r5 {
-		gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpiob 13 GPIO_ACTIVE_HIGH>;
 			label = "PG2r5";
 		};
 
 		PG_0R9: pg_0r9 {
-		gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpioc 13 GPIO_ACTIVE_HIGH>;
 			label = "PG0r9";
 		};
 
 		PG_1R0: pg_1r0 {
-		gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpiob 12 GPIO_ACTIVE_HIGH>;
 			label = "PG1r0";
 		};
 

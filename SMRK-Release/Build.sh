@@ -72,6 +72,7 @@ if [ "$R" -eq 1 ] ; then
     sed -i "s/++HASH++/$HASH/" How2Flash.txt
     tar -c"$TV"f "$TARFILE" $FILELIST
     tar -C "$MDIR" -r"$TV"f "$TARFILE" mcumgr
+    cp How2Flash.txt /tmp
     /bin/rm -f How2Flash.txt
     set +x
 
