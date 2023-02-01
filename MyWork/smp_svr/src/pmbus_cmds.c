@@ -86,6 +86,19 @@ int twos_5bit(int v)
 	return -val;
 }
 
+int
+encode(double v, int type)
+{
+	double tmp;
+	int t;
+	if (type == PM_LINEAR8) {
+		tmp = v/(pow(2, -8));
+		t = (int)tmp;
+		return t;
+	}
+	return 0;
+}
+
 double
 decode(unsigned short v, int type)
 {
@@ -149,6 +162,32 @@ decode(unsigned short v, int type)
 		printk("Unsupported format\n");
 		return -1;
 	}
+}
+
+int pmbus_set_vout(int rail, double volts)
+{
+	int bus = get_bus(rail);
+	int raw;
+
+	if (bus < 0) {
+		// printk("pmbus_get_vout: Ret err\n");
+		return -1;
+	}
+
+	int type = vrail[rail].type;
+	// only IRPS supports page.
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+
+	char v[20];
+	sprintf(v, "%.4f", volts);
+
+	printk("pmbus set volt to %s\n", v);
+	//pmbus_write(bus, PMBUS_VOUT_COMMAND, 2, buf);
+	raw = encode(volts, PM_LINEAR8);
+	printk("raw = %d (0x%x)\n", raw, raw);
+	return 0;
 }
 
 int

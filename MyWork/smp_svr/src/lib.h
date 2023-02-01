@@ -48,3 +48,4 @@ extern void set_ps_bit(int, int);
 extern int get_ps_stat(int);
 extern void start_cpu();
 extern void set_psbits_hi();
+extern char *f2str(double);

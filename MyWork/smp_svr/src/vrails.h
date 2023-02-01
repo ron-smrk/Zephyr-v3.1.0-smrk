@@ -48,5 +48,6 @@ extern int vrail_off(int);
 extern int vrail_wait_pg(int);
 extern int vrail_pg(int);
 extern int vrail_rdvolt(int, struct power_vals *);
+extern int vrail_setvolt(int, double);
 extern int get_bus(int);
 

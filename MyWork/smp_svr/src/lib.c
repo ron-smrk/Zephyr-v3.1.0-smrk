@@ -55,6 +55,17 @@ char* toUpper(char* s) {
   return s;
 }
 
+/*
+ * return char representation of a double, as printk doesn't support %f
+ */
+static char __tmpbuf[20];
+char *
+f2str(double v)
+{
+	sprintf(__tmpbuf, "%.4f", v);
+	return __tmpbuf;
+}
+
 int
 ishex(char *s)
 {

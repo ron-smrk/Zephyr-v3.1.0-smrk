@@ -15,7 +15,7 @@ struct VoltRails vrail[] = {
 		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
 	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD,
 		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_2R5] = {NULL, NULL, "2r5 (B)", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
+	[VDD_2R5] = {NULL, NULL, "2R5 (B)", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
 	[VDD_0R9] = {NULL, NULL, "0R9 (C)", 0.9, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP,
 		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
@@ -105,6 +105,16 @@ vrail_rdvolt(int rail, struct power_vals *p)
 		p->fval = 0.0;
 	}
 	return rval;
+}
+
+int
+vrail_setvolt(int rail, double v)
+{
+	if (vrail[rail].type & PMBUS_RD) {
+		return pmbus_set_vout(rail, v);
+	}
+	// Couldn't set
+	return -1;
 }
 
 int get_bus(int rail)
