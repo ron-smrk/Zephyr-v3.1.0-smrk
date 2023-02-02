@@ -41,7 +41,7 @@ struct mapping {
  * Assume page is set already
  */
 static int
-dumpval(int bus, struct pm_list *p)
+dumpval(int bus, struct pm_list *p, int rail)
 {
 	unsigned char id[8];
 	unsigned short v;
@@ -50,6 +50,9 @@ dumpval(int bus, struct pm_list *p)
 	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
+	if ((p->command == PMBUS_READ_VOUT) && (rail == VDD_1R0)) {
+		v /= 2;
+	}
 
 	//printk("Got 0x%x for value for %s type=%d units=%s\n", v, p->name, p->type, p->units);
 	switch (p->type) {
@@ -88,9 +91,9 @@ dumpone(int rail)
 	printk("Rail: %s\n", vrail[rail].signame);
 	for (p = pm_info; p->name; p++) {
 		if ((rail == VDD_1R0) && (p->command == PMBUS_TON_RISE)) {
-		printk("Rise time not supported on LD0\n");
+		printk("  ----Rise time not supported on LD0---\n");
 		} else {
-			dumpval(bus, p);
+			dumpval(bus, p, rail);
 		}
 	}
 	return 0;
