@@ -23,9 +23,12 @@ struct pm_list {
 	char *units;
 	int type;
 } pm_info [] = {
-	{PMBUS_READ_VOUT, 2, "Output Voltage", "V", PM_LINEAR8},
-	{PMBUS_READ_IOUT, 2, "Output Current", "Amps", PM_IOUT},
+	{PMBUS_READ_VOUT, 2, "Output Voltage", "Volts", PM_LINEAR8},
+	{PMBUS_READ_IOUT, 2, "Output Current", "Amps", PM_LINEAR11},
 	{PMBUS_READ_TEMPERATURE_1, 2, "Temperature", "Degrees C", PM_LINEAR11},
+	{PMBUS_TON_RISE, 2, "Output Voltage Rise Time", "mSec", PM_LINEAR2},
+	{PMBUS_POWER_GOOD_ON, 2, "Power Good On", "Volts", PM_LINEAR8},
+	{PMBUS_POWER_GOOD_OFF, 2, "Power Good Off", "Volts", PM_LINEAR8},
 	{}
 };
 
@@ -42,18 +45,19 @@ dumpval(int bus, struct pm_list *p)
 {
 	unsigned char id[8];
 	unsigned short v;
-	printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
+	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
 	pmbus_read(bus, p->command, p->size, id);
-	printk("read 0x%02x 0x%02x\n", id[0], id[1]);
+	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
 
-	printk("Got 0x%x for value for %s type=%d units=%s\n", v, p->name, p->type, p->units);
+	//printk("Got 0x%x for value for %s type=%d units=%s\n", v, p->name, p->type, p->units);
 	switch (p->type) {
 	case PM_LINEAR8:
 	case PM_LINEAR11:
+	case PM_LINEAR2:
 	case PM_IOUT:
-		printk("  %s: %.4f %s\n", p->name, decode(v, p->type), p->units);
+		printk("  %s: %s %s\n", p->name, f2str(decode(v, p->type)), p->units);
 		break;
 	default:
 		if (p->size == 1)
@@ -66,32 +70,47 @@ dumpval(int bus, struct pm_list *p)
 	return 0;
 }
 
+static int allrails[] = { VDD_0R85, VDD_2R5, VDD_0R9, VDD_1R8, VDD_1R0, -1 };
+
+
 static int
-dumpall(int rail)
+dumpone(int rail)
 {
 	struct pm_list *p;
-	int bus = get_bus(rail);
+	int bus = IRPS_BUS;
+	int type;
 
-	printk("dumpall got bus %d\n", bus);
-
-
-	if (bus < 0)
+	type = vrail[rail].type;
+	if (irps_setpage(bus, (unsigned char)type&LOOP_MASK) < 0) {
+		printk("Can't set page %d\n", rail);
 		return -EIO;
-	
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		if (irps_setpage(bus, (unsigned char)type&LOOP_MASK) < 0) {
-			printk("Can't set page %d\n", rail);
-			return -EIO;
-		}
 	}
-
+	printk("Rail: %s\n", vrail[rail].signame);
 	for (p = pm_info; p->name; p++) {
-		dumpval(bus, p);
+		if ((rail == VDD_1R0) && (p->command == PMBUS_TON_RISE)) {
+		printk("Rise time not supported on LD0\n");
+		} else {
+			dumpval(bus, p);
+		}
 	}
 	return 0;
 }
+
+static int
+dumpall(int rail)
+{
+	int i;
+
+	if (rail != NUM_RAILS) {
+		return dumpone(rail);
+	}
+
+	for (i = 0; allrails[i] != -1; i++) {
+		dumpone(allrails[i]);
+	}
+	return 0;
+}
+
 int map(char *s, struct mapping *p)
 {
 	s = toLower(s);
@@ -118,17 +137,17 @@ static int getpstate(char *s)
 }
 
 struct mapping looptab[] = {
-	{"0", -2},
+	{"0", VDD_0R85},
 	{"1", VDD_2R5},
 	{"2", VDD_0R9},
 	{"3", VDD_1R8},
 	{"4", VDD_1R0},
-	{"a", -2},
+	{"a", VDD_0R85},
 	{"b", VDD_2R5},
 	{"c", VDD_0R9},
 	{"d", VDD_1R8},
 	{"ldo", VDD_1R0},
-	{"all", -1},
+	{"all", NUM_RAILS},
 	{NULL,0}
 };
 
@@ -161,10 +180,10 @@ irps_dump(const struct shell *sh, size_t argc, char **argv)
 	char *dev = toLower(argv[1]);
 	int rail;
 	
-	printk("\nDumping Device %s\n", dev);
+	//printk("\nDumping Device %s\n", dev);
 
 	rail = getrail(dev);
-	printk("rail = %d\n", rail);
+	//printk("rail = %d\n", rail);
 	if (rail < 0) {
 		printk("Bad rail %s\n", dev);
 		return -1;

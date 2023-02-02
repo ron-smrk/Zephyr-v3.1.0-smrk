@@ -115,6 +115,9 @@ decode(unsigned short v, int type)
 		exp = twos_5bit(exp);
 		v = v & 0x7ff;
 		return (v * pow(2, exp));
+	} else if (type == PM_LINEAR2) {
+		v = v & 0x7ff;	// 11 bits
+		return (v*pow(2, -2));
 	} else if (type == PM_MAX_TEMP) {
 		double i = (double) v;
 		i = i * 10;		// * 10^-r, where r=-1 so 10...
