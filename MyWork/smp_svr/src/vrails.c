@@ -4,24 +4,29 @@
 #include "pmbus_cmds.h"
 
 struct VoltRails vrail[] = {
-	[VDD_0R85] = {NULL, NULL, "0R85 (A)", 0.85, GPIO_EN|GPIO_PG|GPIO_RD|ISIRPS_CHIP|LOOPA, 
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_1R8] = {NULL, NULL, "1R8 (D)", 1.8, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPD|ISIRPS_CHIP,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
+	[VDD_0R85] = {NULL, NULL, "0R85 (A)", 0.85,
+		GPIO_EN|GPIO_PG|GPIO_RD|ISIRPS_CHIP|LOOPA, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
+	[VDD_1R8] = {NULL, NULL, "1R8 (D)", 1.8,
+		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPD|ISIRPS_CHIP, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
 	// VDD_3R3 has no power good signal yet! 
-	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_1R2_DDR] = {NULL, NULL, "1R2_DDR/MGT", 1.2, GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_2R5] = {NULL, NULL, "2R5 (B)", 2.5, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
-	[VDD_0R9] = {NULL, NULL, "0R9 (C)", 0.9, PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt},
+	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+	[VDD_1R2_DDR] = {NULL, NULL, "1R2_DDR/MGT", 1.2,
+		GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD, vrail_on,
+		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+	[VDD_2R5] = {NULL, NULL, "2R5 (B)", 2.5,
+		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
+	[VDD_0R9] = {NULL, NULL, "0R9 (C)", 0.9,
+		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP, vrail_on, vrail_off,
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
 	[VDD_1R0] = {NULL, NULL, "1R0 (LDO)", 1.0,
-		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPLDO|ISIRPS_CHIP|DIVBY2,
-		vrail_on, vrail_off, vrail_wait_pg, vrail_pg, vrail_rdvolt}
+		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPLDO|ISIRPS_CHIP|DIVBY2, vrail_on,
+		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg}
 };
 
 int
@@ -91,23 +96,6 @@ vrail_wait_pg(int rail)
 }
 
 int
-vrail_rdvolt(int rail, struct power_vals *p)
-{
-	int rval = 0;
-	//printk("Rail = %d, type = 0x%08x\n", rail, vrail[rail].type);
-
-	if (vrail[rail].type & PMBUS_RD) {
-		return pmbus_get_vout(rail, p);
-	}
-	if (vrail[rail].waitpg(rail))
-		p->fval = vrail[rail].nominal;
-	else {
-		p->fval = 0.0;
-	}
-	return rval;
-}
-
-int
 vrail_setvolt(int rail, double v)
 {
 	if (vrail[rail].type & PMBUS_RD) {
@@ -128,5 +116,46 @@ int get_bus(int rail)
 	else {
 		return -1;
 	}
+}
+
+
+int
+set_vrails(int sense, int sleep, int wait)
+{
+	printk("\nsetting vrails %s\n", (sense==POWER_ON)?"on":"off");
+	int i;
+	if (sense == POWER_ON) {
+		i = 0;
+		while(i < NUM_RAILS) {
+			vrail_on(i);
+		    vrail_wait_pg(i);	// wait for PG....
+			if (sleep > 0)
+				k_sleep(K_MSEC(1000*sleep));
+			else if (wait) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i++;
+		}
+		// ON, set POR=0 after turning on..
+		set_ps_bit(SET_POR, 0);
+	} else {
+		// point to last one
+		i = NUM_RAILS-1;
+		// OFF, set POR=1 before turning off..
+		set_ps_bit(SET_POR, 1);
+		while (i >= 0) {
+			vrail_off(i);
+			if (sleep > 0)
+				k_sleep(K_MSEC(1000*sleep));			else if (wait) {
+				//printk("press key to continue: ");
+				//c=console_getchar();
+				//printk("BACK\n");
+			}
+			i--;
+		}
+	}
+	return 0;
 }
 

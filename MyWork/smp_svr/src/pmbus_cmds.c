@@ -17,46 +17,7 @@
 #include <math.h>
 #include <stdio.h>
 
-int
-irps_setpage(int bus, unsigned char page)
-{
-	unsigned char read_page;
 
-	// printk("setting to page %d, bus=%d\n", page, bus);
-	pmbus_write(bus, PMBUS_PAGE, 1, &page);
-
-	pmbus_read(bus, PMBUS_PAGE, 1, &read_page);
-
-	if (page != read_page) {
-		printk("bus: %d, Failed to set page to %d (read back %d instead)\n",
-			   bus, page, read_page);
-		return -EIO;
-	}
-	return read_page;
-}
-
-
-/*
- * Mode setting, ON or OFF
- */
-int
-irps_setop(int bus, int rail, int mode)
-{
-	unsigned char byte;
-	if (mode == VOLT_ON) {
-		byte = 0x80;
-	} else if (mode == VOLT_OFF) {
-		byte = 0;
-	} else {
-		printk("Bad mode\n");
-		return -EINVAL;
-	}
-	if (irps_setpage(bus, rail) < 0) {
-		printk("Can't set page %d\n", rail);
-		return -EIO;
-	}
-	return pmbus_write(bus, PMBUS_OPERATION, 1, &byte);
-}
 
 // Remove when used....
 __attribute__ ((unused))
@@ -75,262 +36,385 @@ pmbus_getmfr_id(int bus)
 
 }
 
-int twos_5bit(int v)
-{
-	int val;
 
-	if (v == 0)
-		return 0;
-	val = (v ^ 0x1f) + 1;
-	// printf("v= 0x%x, val = 0x%d\n", v, val);
-	return -val;
+/*
+ * pm commands
+ * pm help
+ * pm seq [-w|-n [time]] <on|off>
+ * pm status
+ * pm volt
+ * pm amps
+ * pm temp
+ */
+
+static int
+pmbus_help_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	printk("\nPower Sequencing Options\n");
+	printk("pm seq [-w|-n [time]] <on|off>\n");
+	//printk("-w - Wait for Key Input between stages\n");
+	printk("     -n SEC - Wait for N seconds between stages\n");
+	printk("     on|off - tune power on/off\n");
+	printk("status - status of power management\n");
+	printk("pwr - Display power info\n");
+	printk("volt - Display Voltages\n");
+	printk("amps - Display Current\n");
+	printk("temp - Display Temperature\n");
+	printk("set - Set voltage <Rail> <Voltage>\n");
+	printk("setreg - set register <Rail> <REGNUM> <VALUE>\n");
+	return 0;
 }
 
-int
-encode(double v, int type)
+static int
+pmbus_status_cmd(const struct shell *sh, size_t argc, char **argv)
 {
-	double tmp;
-	int t;
-	if (type == PM_LINEAR8) {
-		tmp = v/(pow(2, -8));
-		t = (int)tmp;
-		return t;
+	printk("\nStatus\n");
+	return 0;
+}
+static int
+pmbus_seq_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	int n = -1;
+	int wflg = 0;
+	char *tmp = NULL;
+	int val = -1;
+
+	printk("\nPower Sequence\n");
+	for (i = 1; i < argc; i++) {
+		if (argv[i][0] == '-') {
+			switch (argv[i][1]) {
+			case 'w':
+				wflg++;
+				break;
+			case 'n':
+				n = atoi(argv[i+1]);
+				if (n <- 0) {
+					printk(" N must be > 0\n");
+					return -1;
+				}
+				i++;
+				break;
+			default:
+				printk("Bad option: %c\n", argv[i][1]);
+				return -1;
+			}
+		} else {
+			//printk("i=%d, argv=%s\n", i, argv[i]);
+			tmp = strdup(argv[i]);
+			tmp = toLower(tmp);
+			if (strcmp(tmp, "on") == 0) {
+				val = POWER_ON;
+			} else if (strcmp(tmp, "off") == 0) {
+				val = POWER_OFF;
+			} else {
+				printk("Bad arg: %s\n", argv[i]);
+				free(tmp);
+				return -1;
+			}
+			free(tmp);
+		}
+	}
+	//printk("w=%d, val=%d\n", wflg, val);
+	//if (n > 0 )
+	//	printk("Delay: %d\n", n);
+	//	if (wflg)
+	//		console_init();
+
+	// For now ignore
+	wflg = 0;
+	set_vrails(val, n, wflg);
+
+	return 0;
+}
+static int
+pmbus_volt_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	char *mod;
+	int rawmode = 0;
+	struct power_vals pwr;
+	int rval;
+	char v[20], r[20];
+	
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
+
+	printk("\nVoltage Rails: (* - Use PG signal to determine voltage)\n");
+	i = 0;
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V ";
+		rval = pmbus_get_volt(i, &pwr);
+		if (rval < 0) {
+			sprintf(v, "????????");
+			sprintf(r, "---");
+		} else {
+			sprintf(v, "%.4f%s", pwr.fval, mod);
+			if (vrail[i].type & PMBUS_RD)
+				sprintf(r, "(0x%x)", pwr.sval);
+			else
+				sprintf(r, "(---)");
+				
+		}
+		printk("%20s: %s", vrail[i].signame, v);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
+		i++;
 	}
 	return 0;
 }
 
-double
-decode(unsigned short v, int type)
+static int
+pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 {
-	if (type == PM_LINEAR8)
-		return (v*pow(2, -8));
-	else if (type == PM_LINEAR9)
-		return (v*pow(2, -9));
-	else if (type == PM_IOUT) {
-		double tmp = (double) (v*pow(2, -8));
-		tmp =  mytrunc(tmp, 125);
-		return tmp/1000;
-	} else if (type == PM_LINEAR11) {
-		int exp = (v >> 11) & 0x1f;
-		exp = twos_5bit(exp);
-		v = v & 0x7ff;
-		return (v * pow(2, exp));
-	} else if (type == PM_LINEAR2) {
-		v = v & 0x7ff;	// 11 bits
-		return (v*pow(2, -2));
-	} else if (type == PM_MAX_TEMP) {
-		double i = (double) v;
-		i = i * 10;		// * 10^-r, where r=-1 so 10...
-		i = i - 5887;	// - b, where b=5887
-		i = i / 21.0;	// divided by m, where m is 21.
-		return i;
-	} else if (type == PM_MAX_CURRENT) {
-		struct power_vals pwr;
-		
-		// Formula from MAX AN6140
-		// printk("MAXcurrent\n");
-		double vout;
-		double vin;
-
-		pmbus_get_vout(VDD_1R2_DDR, &pwr);
-		vout = pwr.fval;
-		
-		pmbus_get_vin(VDD_1R2_DDR, &pwr);
-		vin = pwr.fval;
-		double d = vout/vin;
-
-		// printk("vin = %f, vout = %f\n", vin, vout);
-
-		double b = 4976.0 - (131.0 * d);
-		double m = 153.0 + (5.61 * d);
-		double a = 0.013;
-		double i = (double) v;
-		pmbus_get_temp(VDD_1R2_DDR, &pwr);
-		double temp = pwr.fval;
-
-		i = i * 10;		// * 10^-r, where r=-1 so 10...
-		i = i - b;
-		i = i / m;
-		i = i + (a * (temp-50.0));
-		return i;
-	} else if (type == PM_MAX_VIN) {
-		// Formula from MAX AN6140
-		// printk("v=%d\n", v);
-		double volt = (double) v;
-		volt *= 100.0;	// 10 ^ (-(-2)) --> 10 ^2 --> 100
-		volt /= 3609.0;
-		//printk("return volt=%f\n", volt);
-		return volt;
-	} else {
-		printk("Unsupported format\n");
-		return -1;
-	}
-}
-
-int pmbus_set_vout(int rail, double volts)
-{
-	int bus = get_bus(rail);
-	int raw;
-
-	if (bus < 0) {
-		// printk("pmbus_get_vout: Ret err\n");
-		return -1;
-	}
-
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
-	}
-
-	char v[20];
-	sprintf(v, "%.4f", volts);
-
-	printk("pmbus set volt to %s\n", v);
-	//pmbus_write(bus, PMBUS_VOUT_COMMAND, 2, buf);
-	raw = encode(volts, PM_LINEAR8);
-	printk("raw = %d (0x%x)\n", raw, raw);
-	return 0;
-}
-
-int
-pmbus_get_vout(int rail, struct power_vals *pwr)
-{
-	unsigned char id[8];
-	unsigned short v;
+	int i;
+	int rval;
+	int match = 0;
 	double volt;
+	double vdiff;
+	char v[20], r[20], name[20], v2[20], v3[20];
 
-	memset(&pwr, sizeof(struct power_vals), 0);
-	int bus = get_bus(rail);
+	if (argc != 3) {
+			printk("usage: pm set <RAIL> <VOLTAGE>\n");
+			return 0;
+	}
 
-	if (bus < 0) {
-		// printk("pmbus_get_vout: Ret err\n");
+	volt = atof(argv[2]);
+	strcpy(r, toLower(argv[1]));
+	sprintf(v, "%.2f", volt);	// printk doesn't to floats..
+	if ((volt <= 0.0) || (volt > 5.00)) {
+		printk("Bad Voltage: %s\n", argv[2]);
+		return 0;
+	}
+
+	printk("rail = %s, voltage = %s \n", r, v);
+
+	i = 0;
+	while (i < NUM_RAILS) {
+		strcpy(name, vrail[i].signame);
+		toLower(name);
+		//printk("name=%s, r=%s\n", name, r);
+		if (strncmp(name, r, 3) == 0) {
+			match = 1;
+			break;
+		}
+		i++;
+	}
+	if (!match) {
+		printk("Bad rail: %s\n", r);
 		return -1;
 	}
+	/*
+	 * we have rail (i), nominal voltage (v2), desired voltage (v)
+	 */
+	vdiff = .1 * vrail[i].nominal;
+	sprintf(v3, "%.2f", vdiff);
+	sprintf(v2, "%.2f", vrail[i].nominal);
 
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, v2, v, v3);
+	return vrail_setvolt(i, volt);
+}
+
+struct reg_cmds {
+	int cmd;
+	int size;
+	int encoding;
+} reg_commands [] = {
+	{0x5e, 2, PM_LINEAR8},
+	{}
+};
+
+static int
+pmbus_setreg_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	int rval;
+	int match = 0;
+	double volt;
+	double vdiff;
+	char v[20], rail[20], name[20], v2[20], v3[20];
+	int reg;
+
+	printk("argc = %d\n", argc);
+	if (argc != 4) {
+			printk("usage: pm setreg <RAIL> <REGNUM> <VALUE>\n");
+			return 0;
 	}
-	pmbus_read(bus, PMBUS_READ_VOUT, 2, id);
-	v = toshort(id);
-	pwr->sval = v & 0xffff;
-	if (type & ISMAX_CHIP) {
-		double RFB1 = 1.87 * 1000;
-		double RFB2 = 2.21 * 1000;
-#if 0
-		printk("----id=%x %x %x %x, v = 0x%x---\n",
-			   id[0], id[1], id[2], id[3], v);
-#endif
-		volt = decode(v, PM_LINEAR9);
-		volt = volt * (1 + (RFB1/RFB2));
+	strcpy(rail, toLower(argv[1]));
+	printk("\nrail: %s\n", rail);
+
+	// put a function call here, used at least one other place
+	for (i = 0; i < NUM_RAILS; i++) {
+		strcpy(name, vrail[i].signame);
+		toLower(name);
+		if (strncmp(name, rail, 3) == 0) {
+			match = 1;
+			break;
+		}
+	}
+	// reg = atox(argv[2]);
+	printk("reg = %s, value=%s\n", argv[2], argv[3]);
+	reg = 0x5e;
+	if (match) {
+		vrail[i].setreg(i, reg, argv[3]);
 	} else {
-		volt = decode(v, PM_LINEAR8);
+		printk("bad rail %s\n", argv[1]);
 	}
-	if (type & DIVBY2)
-		volt /= 2.0;
-	pwr->fval = volt;
-
-	//printk("volt=%f\n", volt);
-	//printk("Returning volt=%f\n", pwr->fval);
-	return 0;
 }
-
+	
 int
-pmbus_get_vin(int rail, struct power_vals *pwr)
+pmbus_setregnull(int rail, int reg, char *val)
 {
-	unsigned char id[8];
-	unsigned short v;
+	printk("pmbus setreg null, rail: %d, reg: 0x%x value: %s\n", rail, reg, val);
+}
 
-	memset(&pwr, sizeof(struct power_vals), 0);
-	int bus = get_bus(rail);
-
-	if (bus < 0)
-		return -1;
-
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+static int
+pmbus_pwr_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	char *mod;
+	struct power_vals pwr;
+	int rval;
+	char v[20], a[20], w[20], *pg;
+	double twatts = 0; // Total power (watts)
+	double amps, volts, watts; 
+	
+	printk("Voltage Rails: (* - Use PG signal to determine voltage)\n");
+	printk("                Rail  Volts       Amps      PG  Watts\n");
+	i = 0;
+	while (i < NUM_RAILS) {
+		if (vrail[i].type & GPIO_RD)
+			mod = "V*";
+		else
+			mod = "V ";
+		rval = pmbus_get_volt(i, &pwr);
+		if (rval < 0) {
+			sprintf(v, "????????");
+			volts = -1.0;
+		} else {
+			sprintf(v, "%.4f%s", pwr.fval, mod);
+			volts = pwr.fval;
+		}
+		rval = pmbus_get_iout(i, &pwr);
+		if (rval < 0) {
+			sprintf(a, "???????");
+			amps = -1.0;
+		} else {
+			sprintf(a, "%.4fA", pwr.fval);
+			amps = pwr.fval;
+		}
+		watts = amps * volts;
+		if (watts >= 0.0) {
+			twatts = twatts + watts;
+			sprintf(w, "%.4fW", watts);
+		} else {
+			sprintf(w, "???????");
+		}
+		if ( (rval=vrail_pg(i)) < 0)
+			pg = "?";
+		else if (rval == POWER_GOOD)
+			pg = "T";
+		else
+			pg = "F";
+			   
+			
+		printk("%20s: %s    %s   %s   %s\n", vrail[i].signame, v, a, pg, w);
+		i++;
 	}
-	pmbus_read(bus, PMBUS_READ_VIN, 2, id);
-	v = toshort(id);
-	pwr->sval = v & 0xffff;
-	if (type & ISMAX_CHIP) {
-#if 0
-		printk("pm_get_vin: id=%x %x %x %x, v = 0x%x---\n",
-			   id[0], id[1], id[2], id[3], v);
-#endif
-		pwr->fval = decode(v, PM_MAX_VIN);
-	} else {
-		pwr->fval = decode(v, PM_LINEAR8);
+	sprintf(w, "%.4f Watts", twatts);
+	printk("                                   Total Power %s\n", w);
+	return 0;
+}
+
+static int trails[] = {VDD_2R5, VDD_0R9, VDD_1R2_DDR, -1};
+static int
+pmbus_temp_cmd(const struct shell *sh, size_t argc, char **argv)
+{
+	int i;
+	int rawmode = 0;
+	struct power_vals pwr;
+	int rval;
+	char temp[20], r[20];
+	
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
+	
+	printk("\nTemperature:\n");
+	i = 0;
+	while (trails[i] != -1) {
+		rval =  pmbus_get_temp(trails[i], &pwr);
+		if (rval < 0) {
+			sprintf(temp, "????????");
+			sprintf(r, "---");
+		} else {
+			sprintf(temp, "%.4fC", pwr.fval);
+			sprintf(r, "(0x%x)", pwr.sval);
+		}
+		printk("%20s: %s", vrail[trails[i]].signame, temp);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
+		i++;
 	}
 	return 0;
 }
 
-int
-pmbus_get_iout(int rail, struct power_vals *pwr)
+static int irails[] = {VDD_0R85, VDD_1R8, VDD_1R2_DDR, VDD_2R5, VDD_0R9, VDD_1R0, -1};
+static int
+pmbus_amps_cmd(const struct shell *sh, size_t argc, char **argv)
 {
-	unsigned char id[8];
-	unsigned short v;
-	int fmt;
+	int i;
+	int rawmode = 0;
+	struct power_vals pwr;
+	char amps[20], r[20];
+	int rval;
 
-	memset(&pwr, sizeof(struct power_vals), 0);
-	int bus = get_bus(rail);
-	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
-
-	if (bus < 0)
-		return -1;
-
-	int type = vrail[rail].type;
-	// printk("type=0x%08x\n", type);
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	if (argc > 1) {
+		if (strcmp(argv[1], "-r") == 0) {
+			rawmode = 1;
+		}
+	}
+	
+	printk("\nCurrent:\n");
+	i = 0;
+	while (irails[i] != -1) {
+		rval = pmbus_get_iout(irails[i], &pwr);
+		if (rval < 0) {
+			sprintf(amps, "????");
+			sprintf(r, "(---)");
+		} else {
+			sprintf(amps, "%.4fA", pwr.fval);
+			sprintf(r, "(0x%x)", pwr.sval);
+		}
+		printk("%20s: %s", vrail[irails[i]].signame, amps);
+		if (rawmode)
+			printk(" %s", r);
+		printk("\n");
+		i++;
 	}
 
-	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
-	v = toshort(id);
-	pwr->sval = v & 0xffff;
-	// printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
-	if (vrail[rail].type & ISMAX_CHIP)
-		fmt = PM_MAX_CURRENT;
-	else
-		fmt = PM_LINEAR11;
-	pwr->fval = decode(v, fmt);
-	// printk("get_iout return %f\n", pwr->fval);
 	return 0;
 }
 
-int
-pmbus_get_temp(int rail, struct power_vals *pwr)
-{
-	unsigned char id[8];
-	unsigned short v;
-	int fmt;
+SHELL_SUBCMD_SET_CREATE(sub_pmbus, (pm));
+SHELL_SUBCMD_ADD((pm), help, NULL, "Help for pmbus commands", pmbus_help_cmd, 1, 0);
+SHELL_SUBCMD_ADD((pm), seq, NULL, "Power Sequencing", pmbus_seq_cmd, 2, 2);
+SHELL_SUBCMD_ADD((pm), status, NULL, "Status", pmbus_status_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), pwr, NULL, "Display Power Information", pmbus_pwr_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), volt, NULL, "Display Voltages", pmbus_volt_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), amps, NULL, "Display Current", pmbus_amps_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), temp, NULL, "Display Temperatures", pmbus_temp_cmd, 1, 1);
+SHELL_SUBCMD_ADD((pm), set, NULL, "Set Voltages", pmbus_set_cmd, 2, 1);
+SHELL_SUBCMD_ADD((pm), setreg, NULL, "Set PMBus Registers", pmbus_setreg_cmd, 4, 0);
 
-	memset(&pwr, sizeof(struct power_vals), 0);
-	int bus = get_bus(rail);
-	// printk("pmbus_get_temp: rail=%d, bus=%d\n", rail, bus);
-
-	if (bus < 0)
-		return -1;
-
-	int type = vrail[rail].type;
-	// only IRPS supports page.
-	if (type & ISIRPS_CHIP) {
-		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
-	}
-
-	pmbus_read(bus, PMBUS_READ_TEMPERATURE_1, 2, id);
-	// printk("Read Temp got 0x%x 0x%x\n", id[0], id[1]);
-	v = toshort(id);
-	pwr->sval = v & 0xffff;
-	if (vrail[rail].type & ISMAX_CHIP)
-		fmt = PM_MAX_TEMP;
-	else
-		fmt = PM_LINEAR11;
-	pwr->fval = decode(v, fmt);
-	return 0;
-}
+SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);

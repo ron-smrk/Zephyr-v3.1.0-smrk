@@ -242,15 +242,6 @@ enum pmbus_registers {
 #define PB_HAS_TEMP_RATING         BIT_ULL(43)
 #define PB_HAS_MFR_INFO            BIT_ULL(50)
 
-
-extern int pmget_mfr_id(int);
-extern int pmbus_write(int, int, int, unsigned char *);
-extern int pmbus_read(int, int, int, unsigned char *);
-extern int pmbus_wrblock(int, int, int, unsigned char *);
-extern int pmbus_rdblock(int, int, int, unsigned char *);
-extern double pmread_vout(int, int);
-extern int set_vrails(int, int, int);
-
 /*
  * Data encoding types
  */
@@ -278,4 +269,19 @@ struct power_vals {
 	int		ival;
 };
 
+
+extern int pmget_mfr_id(int);
+extern int pmbus_write(int, int, int, unsigned char *);
+extern int pmbus_read(int, int, int, unsigned char *);
+extern int pmbus_wrblock(int, int, int, unsigned char *);
+extern int pmbus_rdblock(int, int, int, unsigned char *);
+extern double pmread_vout(int, int);
+extern int pmbus_get_volt(int, struct power_vals *);
+extern int pmbus_set_vout(int, double);
+extern int pmbus_get_vout(int, struct power_vals *);
+extern int pmbus_get_vin(int, struct power_vals *);
+extern double decode(unsigned short, int);
+
 #endif /* __PMBUS_H */
+
+

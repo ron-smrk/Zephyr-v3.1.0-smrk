@@ -40,6 +40,7 @@ struct VoltRails {
 	int	(*waitpg)(int);	// Wait for Voltage good
 	int (*pg)(int);		// return POWER_GOOD or POWER_BAD
 	int (*rdvolt)(int, struct power_vals *);	// readback Voltage
+	int (*setreg)(int, int, char *);
 };
 
 extern struct VoltRails vrail[];
@@ -47,7 +48,6 @@ extern int vrail_on(int);
 extern int vrail_off(int);
 extern int vrail_wait_pg(int);
 extern int vrail_pg(int);
-extern int vrail_rdvolt(int, struct power_vals *);
 extern int vrail_setvolt(int, double);
 extern int get_bus(int);
-
+extern int set_vrails(int, int, int);

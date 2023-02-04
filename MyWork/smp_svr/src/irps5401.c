@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/byteorder.h>
 
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/i2c.h>
 #include <drivers/gpio.h>
@@ -17,7 +18,8 @@
 #include <math.h>
 
 struct pm_list {
-	unsigned char command;
+	unsigned char getcmd;
+	unsigned char setcmd;
 	int size;
 	char *name;
 	char *units;
@@ -37,6 +39,56 @@ struct mapping {
 	int val;
 };
 
+int
+irps_setpage(int bus, unsigned char page)
+{
+	unsigned char read_page;
+
+	// printk("setting to page %d, bus=%d\n", page, bus);
+	pmbus_write(bus, PMBUS_PAGE, 1, &page);
+
+	pmbus_read(bus, PMBUS_PAGE, 1, &read_page);
+
+	if (page != read_page) {
+		printk("bus: %d, Failed to set page to %d (read back %d instead)\n",
+			   bus, page, read_page);
+		return -EIO;
+	}
+	return read_page;
+}
+
+int
+irps_setreg(int rail, int reg, char *value)
+{
+	printk("\nirps setting rail: %d, reg: 0x%x, value: %s\n", rail, reg, value);
+
+	return 0;
+}
+
+
+/*
+ * Mode setting, ON or OFF
+ */
+int
+irps_setop(int bus, int rail, int mode)
+{
+	unsigned char byte;
+	if (mode == VOLT_ON) {
+		byte = 0x80;
+	} else if (mode == VOLT_OFF) {
+		byte = 0;
+	} else {
+		printk("Bad mode\n");
+		return -EINVAL;
+	}
+	if (irps_setpage(bus, rail) < 0) {
+		printk("Can't set page %d\n", rail);
+		return -EIO;
+	}
+	return pmbus_write(bus, PMBUS_OPERATION, 1, &byte);
+}
+
+
 /*
  * Assume page is set already
  */
@@ -45,12 +97,12 @@ dumpval(int bus, struct pm_list *p, int rail)
 {
 	unsigned char id[8];
 	unsigned short v;
-	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->command, p->size);
-	pmbus_read(bus, p->command, p->size, id);
+	//printk("Read cmd: 0x%x, sz: 0x%x\n", p->getcmd, p->size);
+	pmbus_read(bus, p->getcmd, p->size, id);
 	//printk("read 0x%02x 0x%02x\n", id[0], id[1]);
 		  
 	v = toshort(id);
-	if ((p->command == PMBUS_READ_VOUT) && (rail == VDD_1R0)) {
+	if ((p->getcmd == PMBUS_READ_VOUT) && (rail == VDD_1R0)) {
 		v /= 2;
 	}
 
@@ -90,7 +142,7 @@ dumpone(int rail)
 	}
 	printk("Rail: %s\n", vrail[rail].signame);
 	for (p = pm_info; p->name; p++) {
-		if ((rail == VDD_1R0) && (p->command == PMBUS_TON_RISE)) {
+		if ((rail == VDD_1R0) && (p->getcmd == PMBUS_TON_RISE)) {
 		printk("  ----Rise time not supported on LD0---\n");
 		} else {
 			dumpval(bus, p, rail);

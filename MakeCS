@@ -4,7 +4,7 @@ echo "-k" > cscope.files
 
 for f in arch/arm arch/common  boards/arm/smrk100g drivers include kernel lib modules MyWork/smp_svr samples soc/arm/st_stm32 subsys ../modules/audio ../modules/crypto ../modules/debug ../modules/fs ../modules/lib ../modules/tee ../modules/hal/stm32 ../bootloader
 do
-    find -L $f -name '*.[chsS]' >> cscope.files
+    find  $f -type f -name '*.[chsS]' >> cscope.files
 done
 
 sed -i 's/^/"/;s/$/"/' cscope.files
