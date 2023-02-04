@@ -6,6 +6,7 @@
 *.pyc
 *.swp
 *.swo
+*.tgz
 *.gdb_history
 vivado_*.jou
 signed-*.bin
