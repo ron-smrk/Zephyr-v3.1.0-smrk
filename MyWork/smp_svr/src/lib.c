@@ -59,12 +59,20 @@ char* toUpper(char* s) {
 /*
  * return char representation of a double, as printk doesn't support %f
  */
-static char __tmpbuf[20];
+#define NSTR 10
+#define SLEN 20
+static char __tmpbuf[NSTR*SLEN];
+static int fptr = 0;
 char *
 f2str(double v)
 {
-	sprintf(__tmpbuf, "%.4f", v);
-	return __tmpbuf;
+	char *ptr = &__tmpbuf[SLEN*fptr];
+
+	sprintf(ptr, "%.4f", v);
+	fptr += 1;
+	if (fptr >= NSTR)
+		fptr = 0;
+	return ptr;
 }
 
 int
