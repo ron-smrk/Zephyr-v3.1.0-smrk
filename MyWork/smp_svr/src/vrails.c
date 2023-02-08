@@ -23,7 +23,7 @@ struct VoltRails vrail[] = {
 		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg},
 	[VDD_0R9] = {NULL, NULL, "0R9 (C)", 0.9,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_regnull},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg},
 	[VDD_1R0] = {NULL, NULL, "1R0 (LDO)", 1.0,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPLDO|ISIRPS_CHIP|DIVBY2, vrail_on,
 		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg}
