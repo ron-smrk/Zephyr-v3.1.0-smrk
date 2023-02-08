@@ -40,7 +40,7 @@ struct VoltRails {
 	int	(*waitpg)(int);	// Wait for Voltage good
 	int (*pg)(int);		// return POWER_GOOD or POWER_BAD
 	int (*rdvolt)(int, struct power_vals *);	// readback Voltage
-	int (*setreg)(int, int, char *);
+	int (*reg)(int, struct pmbus_op *);		// set/display registers
 };
 
 extern struct VoltRails vrail[];

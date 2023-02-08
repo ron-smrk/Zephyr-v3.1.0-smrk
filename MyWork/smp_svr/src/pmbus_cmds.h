@@ -11,6 +11,6 @@ extern int pmbus_get_iout(int, struct power_vals *);
 extern int pmbus_get_temp(int, struct power_vals *);
 extern int pmbus_set_vout(int, double);
 extern double decode(unsigned short, int);
-extern int pmbus_setregnull(int, int, char *);
+extern int pmbus_regnull(int, struct pmbus_op *);
 
 #endif /* __PMBUS_CMDS_H */

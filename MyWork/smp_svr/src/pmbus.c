@@ -65,11 +65,18 @@ encode(double v, int type)
 {
 	double tmp;
 	int t;
-	if (type == PM_LINEAR8) {
-		tmp = v/(pow(2, -8));
-		t = (int)tmp;
-		return t;
+		switch (type) {
+		case PM_LINEAR8:
+			tmp = v/(pow(2, -8));
+			t = (int)tmp;
+			return t;
+		case PM_LINEAR2:
+			tmp = v/(pow(2, -2));
+			t = (int)tmp;
+			t = t | (0x1e << 11);	// 2's comp exponent..
+			return t;
 	}
+	printk("Unknown encoding %d\n", type);
 	return 0;
 }
 
@@ -230,6 +237,8 @@ pmbus_wrblock(int pmdev, int command, int length, unsigned char *data)
 int
 pmbus_write(int pmdev, int command, int length, unsigned char *data)
 {
+	// printk("pmbus_write=data[0]=0x%x data[1]=0x%x\n", data[0], data[1]);
+		
 	return pmbus_wr_common(pmdev, command, length, data, FALSE);
 }
 
@@ -334,10 +343,7 @@ pmbus_set_vout(int rail, double volts)
 		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
 	}
 
-	char v[20];
-	sprintf(v, "%.4f", volts);
-
-	printk("pmbus set volt to %s\n", v);
+	printk("pmbus set volt to %s\n", f2str(volts, 2));
 	//pmbus_write(bus, PMBUS_VOUT_COMMAND, 2, buf);
 	raw = encode(volts, PM_LINEAR8);
 	printk("raw = %d (0x%x)\n", raw, raw);

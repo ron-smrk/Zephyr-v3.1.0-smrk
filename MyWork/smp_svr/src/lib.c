@@ -64,11 +64,11 @@ char* toUpper(char* s) {
 static char __tmpbuf[NSTR*SLEN];
 static int fptr = 0;
 char *
-f2str(double v)
+f2str(double v, int ndec)
 {
 	char *ptr = &__tmpbuf[SLEN*fptr];
 
-	sprintf(ptr, "%.4f", v);
+	sprintf(ptr, "%.*f", ndec, v);
 	fptr += 1;
 	if (fptr >= NSTR)
 		fptr = 0;

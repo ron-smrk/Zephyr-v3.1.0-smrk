@@ -19,7 +19,7 @@
 
 struct pm_list {
 	unsigned char getcmd;
-	unsigned char setcmd;
+//	unsigned char setcmd;
 	int size;
 	char *name;
 	char *units;
@@ -58,10 +58,48 @@ irps_setpage(int bus, unsigned char page)
 }
 
 int
-irps_setreg(int rail, int reg, char *value)
+irps_reg(int rail, struct pmbus_op *p)
 {
-	printk("\nirps setting rail: %d, reg: 0x%x, value: %s\n", rail, reg, value);
+	int bus = get_bus(rail);
+	char	data[8];
+	int		val;
+	double	fval;
+	unsigned short v;
 
+	if (bus < 0) {
+		// printk("pmbus_get_vout: Ret err\n");
+		return -1;
+	}
+
+	int type = vrail[rail].type;
+	if (type & ISIRPS_CHIP) {
+		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
+	}
+
+	if (p->mode == PMWRITE) {
+		if (p->rawmode) {
+			val = strtol(p->value, NULL, 16);
+			// printk("data (raw) - 0x%x\n", val);
+		} else {
+			// printk("data str: --%s--\n", p->value);
+			fval = atof(p->value);
+			// printk("data (float) - %s\n", f2str(fval, 2));
+			val = encode(fval, p->encoding);
+			// printk("data (raw) - 0x%x\n", val);
+		}
+		data[1] = (val >> 8) & 0xff;
+		data[0] = val & 0xff;
+		//data[1] = 0xf0;
+		// printk("irps setting rail: %d, reg: 0x%x, value: 0x%x 0x%x\n", rail, p->reg, data[0], data[1]);
+		pmbus_write(bus, p->reg, p->size, data);
+	} else {
+		// printk("irps getting rail: %d, reg: 0x%x\n", rail, p->reg);
+		pmbus_read(bus, p->reg, p->size, data);
+		// printk("got data: 0x%x 0x%x\n", data[0], data[1]);
+		v = toshort(data);
+		fval = decode(v, p->encoding);
+		printk("Reg: 0x%x, Value: %s\n", p->reg, f2str(fval, 4));
+	}
 	return 0;
 }
 
@@ -112,7 +150,7 @@ dumpval(int bus, struct pm_list *p, int rail)
 	case PM_LINEAR11:
 	case PM_LINEAR2:
 	case PM_IOUT:
-		printk("  %s: %s %s\n", p->name, f2str(decode(v, p->type)), p->units);
+		printk("  %s: %s %s\n", p->name, f2str(decode(v, p->type), 4), p->units);
 		break;
 	default:
 		if (p->size == 1)

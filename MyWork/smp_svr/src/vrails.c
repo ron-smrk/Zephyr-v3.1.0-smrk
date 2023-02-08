@@ -6,27 +6,27 @@
 struct VoltRails vrail[] = {
 	[VDD_0R85] = {NULL, NULL, "0R85 (A)", 0.85,
 		GPIO_EN|GPIO_PG|GPIO_RD|ISIRPS_CHIP|LOOPA, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg},
 	[VDD_1R8] = {NULL, NULL, "1R8 (D)", 1.8,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPD|ISIRPS_CHIP, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg},
 	// VDD_3R3 has no power good signal yet! 
 	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_regnull},
 	[VDD_1R2_DDR] = {NULL, NULL, "1R2_DDR/MGT", 1.2,
 		GPIO_EN|GPIO_PG|PMBUS_RD|ISMAX_CHIP, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_regnull},
 	[VDD_0R6] = {NULL, NULL, "0R6", 0.6, GPIO_EN|GPIO_PG|GPIO_RD, vrail_on,
-		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_regnull},
 	[VDD_2R5] = {NULL, NULL, "2R5 (B)", 2.5,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPB|ISIRPS_CHIP, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg},
 	[VDD_0R9] = {NULL, NULL, "0R9 (C)", 0.9,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPC|ISIRPS_CHIP, vrail_on, vrail_off,
-		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_setregnull},
+		vrail_wait_pg, vrail_pg, pmbus_get_volt, pmbus_regnull},
 	[VDD_1R0] = {NULL, NULL, "1R0 (LDO)", 1.0,
 		PMBUS_EN|GPIO_PG|PMBUS_RD|LOOPLDO|ISIRPS_CHIP|DIVBY2, vrail_on,
-		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_setreg}
+		vrail_off, vrail_wait_pg, vrail_pg, pmbus_get_volt, irps_reg}
 };
 
 int

@@ -260,6 +260,8 @@ enum pmbus_registers {
 #define POWER_ON	1
 #define POWER_OFF	0
 
+#define PMREAD		1
+#define PMWRITE		0
 /*
  * Appropriate val filled in depending on desired type
  */
@@ -269,6 +271,14 @@ struct power_vals {
 	int		ival;
 };
 
+struct pmbus_op {
+	int reg;
+	int encoding;
+	int rawmode;
+	int size;
+	int mode;
+	char value[8];
+};
 
 extern int pmget_mfr_id(int);
 extern int pmbus_write(int, int, int, unsigned char *);
@@ -281,7 +291,7 @@ extern int pmbus_set_vout(int, double);
 extern int pmbus_get_vout(int, struct power_vals *);
 extern int pmbus_get_vin(int, struct power_vals *);
 extern double decode(unsigned short, int);
-
+extern int encode(double, int);
 #endif /* __PMBUS_H */
 
 

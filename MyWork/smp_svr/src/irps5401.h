@@ -23,6 +23,6 @@ enum irps5401_registers {
 
 extern int irps_setpage(int, unsigned char);
 extern int irps_setop(int, int, int);
-extern int irps_setreg(int, int, char *);
+extern int irps_reg(int, struct pmbus_op *);
 
 #endif /* __IRPS5401_H */

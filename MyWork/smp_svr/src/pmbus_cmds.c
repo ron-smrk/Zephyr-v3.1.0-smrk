@@ -61,7 +61,7 @@ pmbus_help_cmd(const struct shell *sh, size_t argc, char **argv)
 	printk("amps - Display Current\n");
 	printk("temp - Display Temperature\n");
 	printk("set - Set voltage <Rail> <Voltage>\n");
-	printk("setreg - set register <Rail> <REGNUM> <VALUE>\n");
+	printk("reg - set register <Rail> <REGNUM> <VALUE>\n");
 	return 0;
 }
 
@@ -175,20 +175,22 @@ static int
 pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
-	int rval;
 	int match = 0;
 	double volt;
 	double vdiff;
-	char v[20], r[20], name[20], v2[20], v3[20];
+	char *v;
+	// char v[20], r[20], name[20], v2[20], v3[20];
+	char r[20], name[20];
 
 	if (argc != 3) {
 			printk("usage: pm set <RAIL> <VOLTAGE>\n");
 			return 0;
 	}
 
-	volt = atof(argv[2]);
+	v = argv[2];
+	volt = atof(v);
 	strcpy(r, toLower(argv[1]));
-	sprintf(v, "%.2f", volt);	// printk doesn't to floats..
+//	sprintf(v, "%.2f", volt);	// printk doesn't to floats..
 	if ((volt <= 0.0) || (volt > 5.00)) {
 		printk("Bad Voltage: %s\n", argv[2]);
 		return 0;
@@ -212,67 +214,131 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 		return -1;
 	}
 	/*
-	 * we have rail (i), nominal voltage (v2), desired voltage (v)
+	 * we have rail (i), nominal voltage, desired voltage (v)
 	 */
 	vdiff = .1 * vrail[i].nominal;
-	sprintf(v3, "%.2f", vdiff);
-	sprintf(v2, "%.2f", vrail[i].nominal);
 
-	printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, v2, v, v3);
+	printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, f2str(vrail[i].nominal, 2), v, f2str(vdiff, 2));
 	return vrail_setvolt(i, volt);
 }
 
 struct reg_cmds {
-	int cmd;
+	int regnum;
 	int size;
 	int encoding;
 } reg_commands [] = {
-	{0x5e, 2, PM_LINEAR8},
-	{}
+	{0x5e, 2, PM_LINEAR8},	// POWER_GOOD_ON
+	{0x5f, 2, PM_LINEAR8},  // POWER_GOOD_OFF
+	{0x61, 2, PM_LINEAR2},  // TON_RISE
+	{-1, -1, -1}
 };
 
 static int
-pmbus_setreg_cmd(const struct shell *sh, size_t argc, char **argv)
+pmbus_reg_cmd(const struct shell *sh, size_t argc, char **argv)
 {
 	int i;
-	int rval;
 	int match = 0;
-	double volt;
-	double vdiff;
-	char v[20], rail[20], name[20], v2[20], v3[20];
+	char lrail[20], tmpname[20];
 	int reg;
+	int rawmode = 0;
+	char *rail, *regnum, *value;
+	struct pmbus_op pmb;
+	char **av = argv;
+	int railval;
 
+#if 0
 	printk("argc = %d\n", argc);
-	if (argc != 4) {
-			printk("usage: pm setreg <RAIL> <REGNUM> <VALUE>\n");
+	printk("argv[0] = %s\n", argv[0]);
+
+	for (i=0; i < argc; i++) {
+		printk("argc=%d ptr=0x%x, str=--%s--\n", i, argv[i], argv[i]);
+	}
+#endif
+	
+	av++;	/* past 'reg' */
+	if (strcmp(*av, "-r") == 0) {
+		argc--;
+		av++;
+		rawmode = 1;
+	}
+	if ((argc < 3) || (argc > 4)) {
+			printk("usage: pm reg [-r] <RAIL> <REGNUM> [<VALUE>]\n");
+			printk("  <VALUE> omitted, display current value\n");
 			return 0;
 	}
-	strcpy(rail, toLower(argv[1]));
-	printk("\nrail: %s\n", rail);
+	
+	rail = *av++;
+	regnum = *av++;
+	if (argc == 4)
+		value = *av;
+	else
+		value = NULL;
+#if 0
+	printk("argc = %d\n", argc);
+
+	printk("rail =%s\n", rail);
+	printk("regnum =%s\n", regnum);
+	printk("value =%p\n", value);
+	printk("value =%s\n", value);
+#endif
+	/* lower case version of rail...*/
+	strcpy(lrail, toLower(rail));
+/*
+	printk("\nrail: %s\n", lrail);
+*/
 
 	// put a function call here, used at least one other place
 	for (i = 0; i < NUM_RAILS; i++) {
-		strcpy(name, vrail[i].signame);
-		toLower(name);
-		if (strncmp(name, rail, 3) == 0) {
+		strcpy(tmpname, vrail[i].signame);
+		toLower(tmpname);
+		if (strncmp(tmpname, lrail, 3) == 0) {
 			match = 1;
+			railval = i;
 			break;
 		}
 	}
-	// reg = atox(argv[2]);
-	printk("reg = %s, value=%s\n", argv[2], argv[3]);
-	reg = 0x5e;
-	if (match) {
-		vrail[i].setreg(i, reg, argv[3]);
-	} else {
-		printk("bad rail %s\n", argv[1]);
+	if (!match) {
+		printk("Unknown rail %s\n", rail);
+		return -1;
 	}
+
+	match = 0;
+	reg = strtol(regnum, NULL, 16);
+	// printk("Regnum=0x%x\n", reg);
+	for (i = 0; reg_commands[i].regnum != -1; i++) {
+		// printk("reg[%d] = 0x%x\n", i, reg_commands[i].regnum);
+		if (reg_commands[i].regnum == reg) {
+			match = 1;
+			pmb.reg = reg;
+			pmb.encoding = reg_commands[i].encoding;
+			pmb.size = reg_commands[i].size;
+			pmb.rawmode = rawmode;
+			if (value) {
+				pmb.mode = PMWRITE;
+				strcpy(pmb.value, value);
+			} else {
+				pmb.mode = PMREAD;
+			}
+			break;
+		}
+	}
+	if (!match) {
+		printk("Unknown Register 0x%x\n", reg);
+		return -1;
+	}
+	vrail[railval].reg(railval, &pmb);
+	return 0;
 }
 	
 int
-pmbus_setregnull(int rail, int reg, char *val)
+pmbus_regnull(int rail, struct pmbus_op *p)
 {
-	printk("pmbus setreg null, rail: %d, reg: 0x%x value: %s\n", rail, reg, val);
+	if (p->value) {
+		printk("pmbus_null setting rail: %d, reg: 0x%x, value: %s\n", rail, p->reg, p->value);
+	} else {
+		printk("pmbus_null getting rail: %d, reg: 0x%x\n", rail, p->reg);
+	}
+	return 0;
 }
 
 static int
@@ -415,6 +481,6 @@ SHELL_SUBCMD_ADD((pm), volt, NULL, "Display Voltages", pmbus_volt_cmd, 1, 1);
 SHELL_SUBCMD_ADD((pm), amps, NULL, "Display Current", pmbus_amps_cmd, 1, 1);
 SHELL_SUBCMD_ADD((pm), temp, NULL, "Display Temperatures", pmbus_temp_cmd, 1, 1);
 SHELL_SUBCMD_ADD((pm), set, NULL, "Set Voltages", pmbus_set_cmd, 2, 1);
-SHELL_SUBCMD_ADD((pm), setreg, NULL, "Set PMBus Registers", pmbus_setreg_cmd, 4, 0);
+SHELL_SUBCMD_ADD((pm), reg, NULL, "Set/Display PMBus Registers", pmbus_reg_cmd, 3, 2);
 
 SHELL_CMD_REGISTER(pm, &sub_pmbus, "Power Functions", NULL);
