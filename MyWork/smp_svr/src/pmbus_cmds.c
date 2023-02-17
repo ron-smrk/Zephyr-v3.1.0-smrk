@@ -193,7 +193,7 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 	if (argc == 2) {
 		rdonly = 1;
 		v = NULL;
-		printk("rail = %s, dump only\n", r);
+		// printk("rail = %s, dump only\n", r);
 	} else {
 		v = argv[2];
 		volt = atof(v);
@@ -201,7 +201,7 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 			printk("Bad Voltage: %s\n", argv[2]);
 			return 0;
 		}
-		printk("rail = %s, voltage = %s \n", r, v);
+		// printk("rail = %s, voltage = %s \n", r, v);
 	};
 
 	i = 0;
