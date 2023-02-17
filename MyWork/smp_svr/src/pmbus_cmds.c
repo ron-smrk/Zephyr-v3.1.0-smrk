@@ -224,14 +224,24 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 	 */
 	int ac;
 	if (!rdonly) {
-		ac = 4;
-		vdiff = .1 * vrail[i].nominal;
 
-		printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, f2str(vrail[i].nominal, 2), v, f2str(vdiff, 2));
+		ac = 4;
+		// This is maximum difference allowed (10%)
+		vdiff = .1 * vrail[i].nominal;
+		//printk("volt = %s\n", f2str(volt, 2));
+		//printk("nominal = %s\n", f2str(vrail[i].nominal, 2));
+		//printk("Diff: %s\n", f2str(volt - vrail[i].nominal, 2));
+		//printk("fabs(Diff: %s)\n", f2str(fabs(volt - vrail[i].nominal), 2));
+		if ( fabs(volt - vrail[i].nominal) > vdiff ) {
+			printk("New voltage needs to be within 10%% of nominal\n");
+			return -1;
+		}
+
+		printk("setting rail %s nominal(%s) to %s (max diff=%s) \n", vrail[i].signame, f2str(vrail[i].nominal, 2), v, f2str(vdiff, 2));
 	} else {
 		ac = 3;
 	}
-	
+
 	char *av[10];
 	av[0] = "reg";
 	av[1] = r;
