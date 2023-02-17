@@ -17,6 +17,7 @@
 #include <math.h>
 #include <stdio.h>
 
+static int pmbus_reg_cmd(const struct shell *, size_t, char **);
 
 
 // Remove when used....
@@ -181,22 +182,27 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 	char *v;
 	// char v[20], r[20], name[20], v2[20], v3[20];
 	char r[20], name[20];
+	int rdonly = 0;
 
-	if (argc != 3) {
+	if ((argc < 2) || (argc > 3)) {
 			printk("usage: pm set <RAIL> <VOLTAGE>\n");
 			return 0;
 	}
 
-	v = argv[2];
-	volt = atof(v);
 	strcpy(r, toLower(argv[1]));
-//	sprintf(v, "%.2f", volt);	// printk doesn't to floats..
-	if ((volt <= 0.0) || (volt > 5.00)) {
-		printk("Bad Voltage: %s\n", argv[2]);
-		return 0;
-	}
-
-	printk("rail = %s, voltage = %s \n", r, v);
+	if (argc == 2) {
+		rdonly = 1;
+		v = NULL;
+		printk("rail = %s, dump only\n", r);
+	} else {
+		v = argv[2];
+		volt = atof(v);
+		if ((volt <= 0.0) || (volt > 5.00)) {
+			printk("Bad Voltage: %s\n", argv[2]);
+			return 0;
+		}
+		printk("rail = %s, voltage = %s \n", r, v);
+	};
 
 	i = 0;
 	while (i < NUM_RAILS) {
@@ -216,10 +222,24 @@ pmbus_set_cmd(const struct shell *sh, size_t argc, char **argv)
 	/*
 	 * we have rail (i), nominal voltage, desired voltage (v)
 	 */
-	vdiff = .1 * vrail[i].nominal;
+	int ac;
+	if (!rdonly) {
+		ac = 4;
+		vdiff = .1 * vrail[i].nominal;
 
-	printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, f2str(vrail[i].nominal, 2), v, f2str(vdiff, 2));
-	return vrail_setvolt(i, volt);
+		printk("setting rail %s nominal(%s) to %s (diff=%s) \n", vrail[i].signame, f2str(vrail[i].nominal, 2), v, f2str(vdiff, 2));
+	} else {
+		ac = 3;
+	}
+	
+	char *av[10];
+	av[0] = "reg";
+	av[1] = r;
+	av[2] = "21";
+	av[3] = v;
+
+	
+	return pmbus_reg_cmd(NULL, ac, av);
 }
 
 struct reg_cmds {
@@ -227,6 +247,8 @@ struct reg_cmds {
 	int size;
 	int encoding;
 } reg_commands [] = {
+	{0x21, 2, PM_LINEAR8},	// VOUT_COMMAND
+	{0x24, 2, PM_LINEAR8},	// VOUT_MAX
 	{0x5e, 2, PM_LINEAR8},	// POWER_GOOD_ON
 	{0x5f, 2, PM_LINEAR8},  // POWER_GOOD_OFF
 	{0x61, 2, PM_LINEAR2},  // TON_RISE
@@ -254,7 +276,7 @@ pmbus_reg_cmd(const struct shell *sh, size_t argc, char **argv)
 		printk("argc=%d ptr=0x%x, str=--%s--\n", i, argv[i], argv[i]);
 	}
 #endif
-	
+
 	av++;	/* past 'reg' */
 	if (strcmp(*av, "-r") == 0) {
 		argc--;
