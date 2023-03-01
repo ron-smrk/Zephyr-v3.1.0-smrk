@@ -18,6 +18,8 @@ help_cmd(int argc, char **argv)
 }
 
 struct command_table cmd_tab[] = {
+	{"vers", vers_cmd, "Show Software Version."},
+	{"reboot", reboot_cmd, "System reboot."},
 	{"pm", pm_cmd, "Power Management commands."},
 	{"i2c", i2c_cmd, "I2C Commands"},
 	{"hist", hist_cmd, "History"},
@@ -63,6 +65,7 @@ main()
 	int i;
 	int rval;
 
+	printf("Welcome to smrk100g (%s)\n", KERNEL_VERSION_STRING);
 	while (1) {
 		char *savedline;
 

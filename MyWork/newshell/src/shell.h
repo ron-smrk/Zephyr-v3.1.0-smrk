@@ -1,10 +1,12 @@
 #ifdef EMUL
 #include <unistd.h>
+#define KERNEL_VERSION_STRING "EMUL"
 #endif
 
 #ifndef EMUL
 #include <zephyr/zephyr.h>
 #include <zephyr/sys/printk.h>
+#include <version.h>
 #endif
 
 
@@ -31,8 +33,10 @@ extern struct history hist[];
 
 extern int pm_cmd(int, char **);
 extern int i2c_cmd(int, char **);
+extern int hist_cmd(int, char **);
+extern int vers_cmd(int, char **);
+extern int reboot_cmd(int, char **);
 extern void add2hist(char *);
 
-extern int hist_cmd(int, char **);
 extern int zgetline(char **);
 

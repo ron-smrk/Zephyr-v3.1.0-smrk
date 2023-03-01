@@ -1,5 +1,7 @@
 #include "shell.h"
-
+#ifndef EMUL
+#include <zephyr/sys/reboot.h>
+#endif
 struct history hist_tab[NHIST] = {0};
 
 static int hnum = 0; // ever increasing history number
@@ -61,5 +63,23 @@ i2c_cmd(int argc, char **argv)
 	for ( i = 0; i < argc; i++) {
 		printf("arg[%d]: %s\n", i, argv[i]);
 	}
+	return 0;
+}
+
+int
+vers_cmd(int argc, char **argv)
+{
+	printf("Version %s\n", KERNEL_VERSION_STRING);
+	return 0;
+}
+
+int
+reboot_cmd(int argc, char **argv)
+{
+	printf("Rebooting.....\n\n\n");
+#ifndef EMUL
+	k_sleep(K_MSEC(100));
+	sys_reboot(SYS_REBOOT_COLD);
+#endif
 	return 0;
 }

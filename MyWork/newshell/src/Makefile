@@ -39,6 +39,6 @@ release:
 
 cscope: ${SRCLIST}
 	/bin/rm -f cscope.*
-	$(foreach f,$(SRCLIST),echo $(f) >> cscope.files;)
+	find . -name '*.[chSs]' > cscope.files
 	cscope -b
 
