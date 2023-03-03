@@ -72,7 +72,7 @@ void putch(int c)
 	/* 	console_putchar(0x0a); */
 	/* 	console_putchar('!'); */
 	/* } else */
-		console_putchar(c);
+	console_putchar(c);
 #endif
 }
 
@@ -176,6 +176,9 @@ zgetline(char **ptr)
     }
     *line = '\0';
 	*ptr = linep;
+	if (strlen(*ptr) == 0) {
+		return GLEOF;
+	}
     return rval;
 }
 

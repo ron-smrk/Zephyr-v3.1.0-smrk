@@ -31,12 +31,17 @@ struct history {
 extern struct command_table cmd_tab[];
 extern struct history hist[];
 
-extern int pm_cmd(int, char **);
+extern int pmbus_cmd(int, char **);
 extern int i2c_cmd(int, char **);
+extern int led_cmd(int, char **);
 extern int hist_cmd(int, char **);
 extern int vers_cmd(int, char **);
 extern int reboot_cmd(int, char **);
 extern void add2hist(char *);
 
-extern int zgetline(char **);
+extern int i2c_scan(int, char **);
+extern int i2c_set_bus(int, char **);
+extern int i2c_set_dev(int, char **);
 
+extern int zgetline(char **);
+extern int runcmdlist(struct command_table *, char *, int, char *);

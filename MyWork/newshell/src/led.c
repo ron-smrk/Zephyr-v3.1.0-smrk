@@ -1,7 +1,8 @@
 #include <stdlib.h>
-#include <zephyr/shell/shell.h>
+#include <string.h>
+#include <stdio.h>
 #include <sys/byteorder.h>
-#include "my2c.h"
+#include "i2c.h"
 
 #include "lib.h"
 
@@ -27,7 +28,8 @@ struct lmap {
 };
 	
 		
-static int cmd_led(const struct shell *sh, size_t argc, char **argv)
+int
+led_cmd(int argc, char **argv)
 {
 	char s[10];
 	char buf[20];
@@ -40,7 +42,13 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 	int all = 0;
 	char gall = 0, yall = 0, allmask = 0;
 	int val;
-	
+
+	if (argc < 3) {
+		printf("usage: led <NAME> <STATE>\n");
+		printf("NAME: [d8|d9|all]  (Case insensitive)\n");
+		printf("STATE: [G|Y|on|off\n");
+		return 0;
+	}
 	p = &ledmap[0];
 	strcpy(s, toLower(argv[1]));
 	for (; p->name != NULL; p++) {
@@ -59,13 +67,13 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 			all = 1;
 			name = "all";
 		} else {
-			printk("Not found: %s\n", s);
+			printf("Not found: %s\n", s);
 			return -ENOENT;
 		}
 	}
 #if 0
-	printk("name: %s, ypin=%d, gpin=%d, mask=0x%x\n", name, ypin, gpin, mask);
-	printk("yall=0x%x, gall = 0x%x, allmask = 0x%02x\n", yall, gall, allmask);
+	printf("name: %s, ypin=%d, gpin=%d, mask=0x%x\n", name, ypin, gpin, mask);
+	printf("yall=0x%x, gall = 0x%x, allmask = 0x%02x\n", yall, gall, allmask);
 #endif
 	strcpy(s, toLower(argv[2]));
 	switch (s[0]) {
@@ -92,11 +100,11 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 			gval = 0;
 			break;
 		} else {
-			printk("Bad option: %s\n", s);
+			printf("Bad option: %s\n", s);
 			return -ENOENT;
 		}
 	default:
-		printk("Bad option: %s\n", s);
+		printf("Bad option: %s\n", s);
 		return -ENOENT;
 
 	}
@@ -105,8 +113,8 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 		mask = allmask;
 
 #if 0
-	printk("gval = 0x%02x\n", gval);
-	printk("mask = 0x%02x\n", mask);
+	printf("gval = 0x%02x\n", gval);
+	printf("mask = 0x%02x\n", mask);
 #endif
 	
 	/* LED Controller is on I2C Bus 5 */
@@ -125,23 +133,21 @@ static int cmd_led(const struct shell *sh, size_t argc, char **argv)
 
 	i2c_read_bytes(LED_ADDR, 5, buf, 1);
 #if 0
-	printk("read 0x%02x\n", buf[0]);
+	printf("read 0x%02x\n", buf[0]);
 #endif
 
 	tmp = buf[0];
 
 	val = tmp & ~mask;
 #if 0
-	printk("val=0x%x\n", val);
-	printk("tmp=0x%x, mask=0x%x, ~mask=0x%x\n", tmp, mask, ~mask);
+	printf("val=0x%x\n", val);
+	printf("tmp=0x%x, mask=0x%x, ~mask=0x%x\n", tmp, mask, ~mask);
 #endif		
 	   
 	buf[0] = (tmp & ~mask) | gval;
-	printk("writing 0x%02x\n", buf[0]);
+	printf("writing 0x%02x\n", buf[0]);
 	
 	i2c_write_bytes(LED_ADDR, 5, buf, 1);
 
 	return 0;
 }
-
-SHELL_CMD_ARG_REGISTER(led, NULL, "usage: led [d8|d9|all] [on|off|green|yellow]", cmd_led, 3, 0);

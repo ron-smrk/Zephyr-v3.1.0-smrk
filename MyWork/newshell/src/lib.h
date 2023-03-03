@@ -44,8 +44,12 @@ extern int i2c_read_bytes(int, int, char *, int);
 #define GET_DONE_B	0
 #define GET_INIT	1
 
+#define ENOENT		2
 extern void set_ps_bit(int, int);
 extern int get_ps_stat(int);
 extern void start_cpu();
 extern void set_psbits_hi();
 extern char *f2str(double, int);
+
+extern int i2c_write_bytes(int, int, char *, int);
+extern int i2c_read_bytes(int, int, char *, int);

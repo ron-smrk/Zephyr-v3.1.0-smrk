@@ -13,7 +13,11 @@ LDFLAGS=
 endif
 
 OBJS=shell.o commands.o console.o
-SRCLIST=shell.c shell.h commands.c console.c console.h
+SRCLIST=boardctl.c commands.c console.c console.h \
+	gpio.c gpio.h i2c.c i2c.h irps5401.c irps5401.h led.c \
+	lib.c lib.h pmbus.c pmbus_cmds.c pmbus_cmds.h pmbus.h \
+	shell.c shell.h vrails.c vrails.h
+
 FILELIST=Makefile ${SRCLIST}
 
 LIBS=-lreadline

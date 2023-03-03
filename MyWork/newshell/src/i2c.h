@@ -15,3 +15,4 @@
 
 extern int get_i2c_addr(int);
 extern int get_mux();
+extern char *i2c_dev;

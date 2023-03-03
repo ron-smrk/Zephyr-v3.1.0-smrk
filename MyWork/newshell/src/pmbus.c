@@ -10,7 +10,7 @@
 #include "lib.h"
 #include "pmbus.h"
 #include "pmbus_cmds.h"
-#include "my2c.h"
+#include "i2c.h"
 #include "vrails.h"
 #include "irps5401.h"
 #include <errno.h>
@@ -251,13 +251,13 @@ pmbus_get_iout(int rail, struct power_vals *pwr)
 
 	memset(&pwr, sizeof(struct power_vals), 0);
 	int bus = get_bus(rail);
-	// printk("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);
+	//printf("pmbus_get_iout: rail=%d, bus=%d\n", rail, bus);fflush(stdout);
 
 	if (bus < 0)
 		return -1;
 
 	int type = vrail[rail].type;
-	// printk("type=0x%08x\n", type);
+	//printf("type=0x%08x\n", type);
 	// only IRPS supports page.
 	if (type & ISIRPS_CHIP) {
 		irps_setpage(bus, (unsigned char)type&LOOP_MASK);
@@ -266,13 +266,13 @@ pmbus_get_iout(int rail, struct power_vals *pwr)
 	pmbus_read(bus, PMBUS_READ_IOUT, 2, id);
 	v = toshort(id);
 	pwr->sval = v & 0xffff;
-	// printk("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);
+	//printf("Read I got 0x%x 0x%x (v=0x%x)\n", id[0], id[1], v);fflush(stdout);
 	if (vrail[rail].type & ISMAX_CHIP)
 		fmt = PM_MAX_CURRENT;
 	else
 		fmt = PM_LINEAR11;
 	pwr->fval = decode(v, fmt);
-	// printk("get_iout return %f\n", pwr->fval);
+	//printf("get_iout return %f\n", pwr->fval);fflush(stdout);
 	return 0;
 }
 

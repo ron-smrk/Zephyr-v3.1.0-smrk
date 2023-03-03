@@ -12,7 +12,7 @@
 #include "irps5401.h"
 #include "pmbus_cmds.h"
 #include "vrails.h"
-#include "my2c.h"
+#include "i2c.h"
 #include <errno.h>
 #include <string.h>
 #include <math.h>

@@ -2,7 +2,7 @@
 #include <zephyr/zephyr.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/console/console.h>
-#define fflush(x)	;
+//#define fflush(x)	;
 #endif
 
 
@@ -34,5 +34,6 @@ extern int puts(const char *);
 // zGLine return codes...
 #define GLSTR		0x1
 #define GLESCODE	0x2
+#define GLEOF		0x3	// empty line...
 #define GLERR		-1
 
