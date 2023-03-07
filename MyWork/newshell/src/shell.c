@@ -2,6 +2,38 @@
 #include "console.h"
 #include "lib.h"
 
+#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
+#include <zephyr/device.h>
+#include <zephyr/fs/fs.h>
+#include "fs_mgmt/fs_mgmt.h"
+#include <zephyr/fs/littlefs.h>
+#endif
+#ifdef CONFIG_MCUMGR_CMD_OS_MGMT
+#include "os_mgmt/os_mgmt.h"
+#endif
+#ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
+#include "img_mgmt/img_mgmt.h"
+#endif
+#ifdef CONFIG_MCUMGR_CMD_STAT_MGMT
+#include "stat_mgmt/stat_mgmt.h"
+#endif
+#ifdef CONFIG_MCUMGR_CMD_SHELL_MGMT
+#include "shell_mgmt/shell_mgmt.h"
+#endif
+#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
+#include "fs_mgmt/fs_mgmt.h"
+#endif
+
+#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
+FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
+static struct fs_mount_t littlefs_mnt = {
+	.type = FS_LITTLEFS,
+	.fs_data = &cstorage,
+	.storage_dev = (void *)FLASH_AREA_ID(storage),
+	.mnt_point = "/lfs1"
+};
+#endif
+
 #define PROMPT "# "
 #define MAXARGS	20
 #define WHITESPACE " \t\n"
@@ -150,6 +182,34 @@ main()
 	setup_dev(DEV_SET);
 
 	start_cpu();	// initialize power rails for CPU
+
+	/* Register the built-in mcumgr command handlers. */
+#ifdef CONFIG_MCUMGR_CMD_FS_MGMT
+	rc = fs_mount(&littlefs_mnt);
+	if (rc < 0) {
+		LOG_ERR("Error mounting littlefs [%d]", rc);
+	}
+
+	fs_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_OS_MGMT
+	os_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_IMG_MGMT
+	img_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_STAT_MGMT
+	stat_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_CMD_SHELL_MGMT
+	shell_mgmt_register_group();
+#endif
+#ifdef CONFIG_MCUMGR_SMP_BT
+	start_smp_bluetooth();
+#endif
+#ifdef CONFIG_MCUMGR_SMP_UDP
+	start_smp_udp();
+#endif
 
 	runcmdlist(cmd_tab, PROMPT, 0, NULL);	// 0, 0 means never exit, no args
 	/*
