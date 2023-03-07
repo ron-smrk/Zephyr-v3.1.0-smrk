@@ -43,7 +43,7 @@ struct command_table cmd_tab[] = {
 	{"i2c", i2c_cmd, "I2C Commands"},
 	{"led", led_cmd, "LED Commands"},
 	{"pmbus", pmbus_cmd, "Power Management commands."},
-	{"reboot", reboot_cmd, "System reboot."},
+	{"kernel", kern_cmd, "Kernel Commands."},
 	{"vers", vers_cmd, "Show Software Version."},
 	{0}
 };
