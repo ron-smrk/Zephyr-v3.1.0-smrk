@@ -49,7 +49,7 @@ if [ "$B" -eq 1 ] ; then
     if [ "$V" -eq 1 ] ; then
         set -x
     fi
-    west build -d build2 -b smrk100g -s MyWork/smp_svr
+    west build -d build2 -b smrk100g -s MyWork/newshell
     ../bootloader/mcuboot/scripts/imgtool.py sign --key ../bootloader/mcuboot/smrk-key.pem --header-size=0x200 --align 8  --version "$VER" --slot-size 0x20000 --pad build2/zephyr/zephyr.bin signed-"$VER".bin
     set +x
 fi
