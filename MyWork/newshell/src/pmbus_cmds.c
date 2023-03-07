@@ -48,6 +48,7 @@ pmbus_getmfr_id(int bus)
  * pm temp
  */
 
+#if 0
 static int
 pmbus_help_cmd(int argc, char **argv)
 {
@@ -65,6 +66,8 @@ pmbus_help_cmd(int argc, char **argv)
 	printf("reg - set register <Rail> <REGNUM> <VALUE>\n");
 	return 0;
 }
+
+#endif
 
 static int
 pmbus_status_cmd(int argc, char **argv)
