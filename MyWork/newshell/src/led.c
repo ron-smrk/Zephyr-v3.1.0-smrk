@@ -4,6 +4,7 @@
 #include <sys/byteorder.h>
 #include "i2c.h"
 
+#include "shell.h"
 #include "lib.h"
 
 /*
@@ -26,10 +27,12 @@ struct lmap {
 	/* {"d11", 6, 7, 0x3f}, */
 	{0, 0, 0, 0}
 };
-	
-		
-int
-led_cmd(int argc, char **argv)
+
+/*
+ * real work done here...
+ */
+static int
+led_work(int argc, char **argv)
 {
 	char s[10];
 	char buf[20];
@@ -43,14 +46,14 @@ led_cmd(int argc, char **argv)
 	char gall = 0, yall = 0, allmask = 0;
 	int val;
 
-	if (argc < 3) {
+	if (argc < 2) {
 		printf("usage: led <NAME> <STATE>\n");
 		printf("NAME: [d8|d9|all]  (Case insensitive)\n");
 		printf("STATE: [G|Y|on|off\n");
 		return 0;
 	}
 	p = &ledmap[0];
-	strcpy(s, toLower(argv[1]));
+	strcpy(s, toLower(argv[0]));
 	for (; p->name != NULL; p++) {
 		if (strcmp(p->name, s) == 0 ) {
 			name = p->name;
@@ -75,7 +78,7 @@ led_cmd(int argc, char **argv)
 	printf("name: %s, ypin=%d, gpin=%d, mask=0x%x\n", name, ypin, gpin, mask);
 	printf("yall=0x%x, gall = 0x%x, allmask = 0x%02x\n", yall, gall, allmask);
 #endif
-	strcpy(s, toLower(argv[2]));
+	strcpy(s, toLower(argv[1]));
 	switch (s[0]) {
 	case 'g':
 		if (all)
@@ -137,17 +140,51 @@ led_cmd(int argc, char **argv)
 #endif
 
 	tmp = buf[0];
-
 	val = tmp & ~mask;
+	buf[0] = (tmp & ~mask) | gval;
 #if 0
 	printf("val=0x%x\n", val);
 	printf("tmp=0x%x, mask=0x%x, ~mask=0x%x\n", tmp, mask, ~mask);
-#endif		
-	   
-	buf[0] = (tmp & ~mask) | gval;
 	printf("writing 0x%02x\n", buf[0]);
+#endif
 	
 	i2c_write_bytes(LED_ADDR, 5, buf, 1);
+	printf("\n");
+	return 0;
+}
 
+static struct command_table led_tab[] = {
+	{"d8", led_work, "LED D8 control"},
+	{"d9", led_work, "LED D9 control"},
+	{"all", led_work, "Control all LEDs"},
+	{0}
+};
+
+int
+led_cmd(int argc, char **argv)
+{
+	int i;
+	char *p = NULL;
+
+#if 0
+	printf("run LED submenu...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+#endif
+	if (argc > 1) {
+		p = malloc(256);
+		*p = '\0';
+		for (i = 1; i < argc; i++) {
+			strcat(p, argv[i]);
+			strcat(p, " ");
+		}
+	} else {
+	}
+	runcmdlist(led_tab, "LED> ", 1, p);
+	if (p)
+		free(p);
+
+	//printf("Back...\n");
 	return 0;
 }
