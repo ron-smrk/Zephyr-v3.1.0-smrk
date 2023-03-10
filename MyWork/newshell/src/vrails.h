@@ -35,8 +35,8 @@ struct VoltRails {
 	char *signame;
 	double nominal;
 	int type;			// gpio pin or pmbus command
-	int	(*on)(int);		// Enable/Turn on
-	int (*off)(int);	// Disable/Turn off
+	int busnum;			// i2c busnum.
+	int	(*setpwr)(int, int);		// Enable/Turn on (rail, On/Off)
 	int	(*waitpg)(int);	// Wait for Voltage good
 	int (*pg)(int);		// return POWER_GOOD or POWER_BAD
 	int (*rdvolt)(int, struct power_vals *);	// readback Voltage
@@ -44,8 +44,8 @@ struct VoltRails {
 };
 
 extern struct VoltRails vrail[];
-extern int vrail_on(int);
-extern int vrail_off(int);
+extern int pmbus_vrail_pwr(int, int);
+extern int gpio_vrail_pwr(int, int);
 extern int vrail_wait_pg(int);
 extern int vrail_pg(int);
 extern int vrail_setvolt(int, double);
