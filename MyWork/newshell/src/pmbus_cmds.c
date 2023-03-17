@@ -508,14 +508,14 @@ pmbus_amps_cmd(int argc, char **argv)
 }
 
 static struct command_table pmbus_tab[] = {
-	{"seq", pmbus_seq_cmd, "Power Sequencing"},
+	{"sequence", pmbus_seq_cmd, "Power Sequencing"},
 	{"status", pmbus_status_cmd, "Status"},
-	{"pwr", pmbus_pwr_cmd, "Display Power Information"},
+	{"power", pmbus_pwr_cmd, "Display Power Information"},
 	{"volt", pmbus_volt_cmd, "Display Voltages"},
 	{"amps", pmbus_amps_cmd, "Display Current"},
 	{"temp", pmbus_temp_cmd, "Display Temperatures"},
 	{"set", pmbus_set_cmd, "Set Voltages"},
-	{"reg", pmbus_reg_cmd, "Set/Display PMBus Registers"},
+	{"register", pmbus_reg_cmd, "Set/Display PMBus Registers"},
 	{0}
 };
 

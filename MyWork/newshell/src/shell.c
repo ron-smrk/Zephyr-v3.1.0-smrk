@@ -39,12 +39,12 @@ static struct fs_mount_t littlefs_mnt = {
 #define WHITESPACE " \t\n"
 
 struct command_table cmd_tab[] = {
-	{"hist", hist_cmd, "History"},
+	{"history", hist_cmd, "History"},
 	{"i2c", i2c_cmd, "I2C Commands"},
 	{"led", led_cmd, "LED Commands"},
 	{"pmbus", pmbus_cmd, "Power Management commands."},
 	{"kernel", kern_cmd, "Kernel Commands."},
-	{"vers", vers_cmd, "Show Software Version."},
+	{"version", vers_cmd, "Show Software Version."},
 	{0}
 };
 
@@ -137,7 +137,7 @@ runcmdlist(struct command_table *ct, char *prompt, int allowexit, char *l)
 			} else if (argc > 0) {
 				for (c = ct; c->func; c++) {
 					// printf("testing %s against %s\n", argv[0], c->name);
-					if (strcmp(argv[0], c->name) == 0) {
+					if (strncmp(argv[0], c->name, 2) == 0) {
 						add2hist(savedline);
 						// not exactly sure why......
 						printf("\r");
