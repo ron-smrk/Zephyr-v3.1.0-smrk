@@ -116,6 +116,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 			free(line);
 			continue;
 		} else if (rval == GLERR) {
+			free(line);
 			printf("read error!\n");
 			continue;
 		} else if (rval == GLEOF) {	// if empty && allow exit return else ignore
@@ -160,6 +161,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 						// not exactly sure why......
 						printf("\r");
 						(*c->func)(argc, argv);
+						resethist();
 						match = 1;
 						if (l)
 							return 1;

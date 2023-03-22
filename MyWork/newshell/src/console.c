@@ -141,20 +141,33 @@ zgetline(char **ptr, char *prompt)
 			if (line[0] == PREVH) {
 				//free(line);
 				//line = strdup(prevhist());
-				strcpy(linep, prevhist());
-				line = linep+strlen(linep);
+				int tlen;
+				char *p = prevhist();
+				if (!p) {
+					continue;
+				}
+				strcpy(linep, p);
+				tlen = strlen(linep);
+				line = linep+tlen;
+				len = lenmax - tlen;
 				printf("                                \r");
-				printf("%s%s\r", prompt, linep);
+				printf("%s%s", prompt, linep);
 				fflush(stdout);
 				rval = GLHIST;
 					  
 			} else if (line[0] == NEXTH) {
 				//free(line);
 				//line = strdup(nexthist());
-				strcpy(linep, nexthist());
-				line = linep+strlen(linep);
+				int tlen;
+				char *p = nexthist();
+				if (!p) {
+					continue;
+				}
+				strcpy(linep, p);
+				line = linep+tlen;
+				len = lenmax - tlen;
 				printf("                                \r");
-				printf("%s%s\r", prompt, linep);
+				printf("%s%s", prompt, linep);
 				fflush(stdout);
 				rval = GLHIST;
 			} else {
@@ -165,6 +178,9 @@ zgetline(char **ptr, char *prompt)
 		}
 #endif
 		if ((c == BS) || (c == CTLH)) {
+			// change from possible GLHIST since command was changed
+			// want to add to history...
+			rval = GLSTR;
 			//printf("ERASE\n");
 			// Dont try to erase before line starts!
 			if (line > linep) {
@@ -193,8 +209,19 @@ zgetline(char **ptr, char *prompt)
             linep = linen;
         }
 
-        if((*line++ = c) == '\n')
+#if 0
+        if((*line++ = c) == '\n') {
+			printf("returning...\n");
+				   
             break;
+		}
+#else
+		*line++ = c;
+		// change from possible GLHIST since command was changed
+		// want to add to history...
+		rval = GLSTR;
+#endif
+
     }
     *line = '\0';
 	*ptr = linep;

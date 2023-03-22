@@ -44,6 +44,7 @@ extern int vers_cmd(int, char **);
 extern void add2hist(char *);
 extern char *prevhist(void);
 extern char *nexthist(void);
+void resethist(void);
 extern int i2c_scan(int, char **);
 extern int i2c_set_bus(int, char **);
 extern int i2c_set_dev(int, char **);

@@ -72,3 +72,8 @@ nexthist()
 	}
 	return NULL;
 }
+
+void resethist()
+{
+	currhist = NHIST-1;
+}
