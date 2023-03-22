@@ -14,7 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NHIST	20
+#define NHIST	50
+#define PREVH	'A'		// previous entry
+#define NEXTH	'B'		// next entry
 
 struct command_table {
 	char *name;
@@ -38,11 +40,13 @@ extern int hist_cmd(int, char **);
 extern int kern_cmd(int, char **);
 extern int reboot_cmd(int, char **);
 extern int vers_cmd(int, char **);
-extern void add2hist(char *);
 
+extern void add2hist(char *);
+extern char *prevhist(void);
+extern char *nexthist(void);
 extern int i2c_scan(int, char **);
 extern int i2c_set_bus(int, char **);
 extern int i2c_set_dev(int, char **);
 
-extern int zgetline(char **);
-extern int runcmdlist(struct command_table *, char *, int, char *);
+extern int zgetline(char **, char *);
+extern int runcmdlist(struct command_table *, char *, char *, int, char *);

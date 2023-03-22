@@ -87,7 +87,7 @@ puts(const char *s)
 }
 
 int
-zgetline(char **ptr)
+zgetline(char **ptr, char *prompt)
 {
 	if (!isinited) {
 		init_uart();
@@ -138,8 +138,30 @@ zgetline(char **ptr)
 				line[0] = '\0';
 				rval = GLERR;
 			}
-			*ptr = linep;
-			return rval;
+			if (line[0] == PREVH) {
+				//free(line);
+				//line = strdup(prevhist());
+				strcpy(linep, prevhist());
+				line = linep+strlen(linep);
+				printf("                                \r");
+				printf("%s%s\r", prompt, linep);
+				fflush(stdout);
+				rval = GLHIST;
+					  
+			} else if (line[0] == NEXTH) {
+				//free(line);
+				//line = strdup(nexthist());
+				strcpy(linep, nexthist());
+				line = linep+strlen(linep);
+				printf("                                \r");
+				printf("%s%s\r", prompt, linep);
+				fflush(stdout);
+				rval = GLHIST;
+			} else {
+				*ptr = linep;
+				return rval;
+			}
+			continue;
 		}
 #endif
 		if ((c == BS) || (c == CTLH)) {

@@ -329,7 +329,7 @@ i2c_cmd(int argc, char **argv)
 		}
 	} else {
 	}
-	runcmdlist(i2c_tab, "I2C> ", 1, p);
+	runcmdlist(i2c_tab, "i2c", "I2C> ", 1, p);
 	if (p)
 		free(p);
 

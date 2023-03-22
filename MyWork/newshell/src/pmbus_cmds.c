@@ -540,7 +540,8 @@ pmbus_cmd(int argc, char **argv)
 		}
 	} else {
 	}
-	runcmdlist(pmbus_tab, "PMBus> ", 1, p);
+
+	runcmdlist(pmbus_tab, "pmbus", "PMBus> ", 1, p);
 	if (p)
 		free(p);
 

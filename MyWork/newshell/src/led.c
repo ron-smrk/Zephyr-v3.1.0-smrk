@@ -181,7 +181,7 @@ led_cmd(int argc, char **argv)
 		}
 	} else {
 	}
-	runcmdlist(led_tab, "LED> ", 1, p);
+	runcmdlist(led_tab, "led", "LED> ", 1, p);
 	if (p)
 		free(p);
 

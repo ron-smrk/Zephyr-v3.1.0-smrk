@@ -2,55 +2,24 @@
 #ifndef EMUL
 #include <zephyr/sys/reboot.h>
 #endif
-struct history hist_tab[NHIST] = {0};
-
-static int hnum = 0; // ever increasing history number
-
-void
-add2hist(char *l)
-{
-	int i;
-	
-	if (hist_tab[0].cmd) {
-		// printf("Freeing (%s) %p\n", hist_tab[0].cmd, hist_tab[0].cmd);
-		free(hist_tab[0].cmd);
-	}
-	for ( i = 0; i < (NHIST-1); i++) {
-		hist_tab[i].cmd = hist_tab[i+1].cmd;
-		hist_tab[i].hnum = hist_tab[i+1].hnum;
-	}
-	hist_tab[NHIST-1].cmd = l;
-	hist_tab[NHIST-1].hnum = ++hnum;
-}
-
-int
-hist_cmd(int arc, char **argv)
-{
-	int i;
-
-	for (i=0; i < NHIST; i++) {
-#ifdef DEBUG 
-		if (hist_tab[i].cmd)
-			printf("hist[%d]: %d - %s\n", i, hist_tab[i].hnum, hist_tab[i].cmd);
-		else
-			printf("hist[%d]: %d - %p\n", i, hist_tab[i].hnum, hist_tab[i].cmd);
-#else
-		if (hist_tab[i].cmd)
-			printf("%d: %s\n", hist_tab[i].hnum, hist_tab[i].cmd);
-#endif
-	}
-	return 0;
-}
 
 int uptime_cmd(int argc, char **argv)
 {
+#ifdef EMUL
+	printf("Uptime: 1000 ms\n");
+#else
 	printf("Uptime: %u ms\n", k_uptime_get_32());
+#endif
 	return 0;
 }
 
 int cycles_cmd(int argc, char **argv)
 {
+#ifdef EMUL
+	printf("cycles: 1000 hw cycles\n");
+#else
 	printf("cycles: %u hw cycles\n", k_cycle_get_32());
+#endif
 	return 0;
 }
 
@@ -93,7 +62,7 @@ kern_cmd(int argc, char **argv)
 		}
 	} else {
 	}
-	runcmdlist(kern_tab, "Kernel> ", 1, p);
+	runcmdlist(kern_tab, "kernel", "Kernel> ", 1, p);
 	if (p)
 		free(p);
 
@@ -108,3 +77,47 @@ vers_cmd(int argc, char **argv)
 	return 0;
 }
 
+#ifdef EMUL
+void
+setup_dev(int f)
+{
+	printf("Setupdev: %d\n", f);
+}
+
+void
+start_cpu()
+{
+}
+
+int
+i2c_cmd(int argc, char **argv)
+{
+	int i;
+	printf("run i2c submenu...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+	return 0;
+}
+	
+int
+led_cmd(int argc, char **argv)
+{
+	int i;
+	printf("run led submenu...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+	return 0;
+}
+int
+pmbus_cmd(int argc, char **argv)
+{
+	int i;
+	printf("run pmbus submenu...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+	return 0;
+}
+#endif

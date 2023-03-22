@@ -82,7 +82,7 @@ buildargs(char *p, char **argv)
  * (unless allowexit is 0
  */
 int
-runcmdlist(struct command_table *ct, char *prompt, int allowexit, char *l)
+runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit, char *l)
 {
 	char *line;
 	int argc;
@@ -107,18 +107,25 @@ runcmdlist(struct command_table *ct, char *prompt, int allowexit, char *l)
 			rval = GLSTR;
 
 		} else {
-			rval = zgetline(&line);
+			rval = zgetline(&line, prompt);
 			// printf("got %s from zgetline\n", line);
 		}
 
 		if (rval == GLESCODE) {
 			printf("ESCAPE CODE: %s!!!\n", line);
+			free(line);
+			continue;
 		} else if (rval == GLERR) {
 			printf("read error!\n");
+			continue;
 		} else if (rval == GLEOF) {	// if empty && allow exit return else ignore
-			if (allowexit)
+			free(line);
+			if (allowexit) {
 				return 1;
-		} else if (strcmp(line, "help")==0) {
+			}
+			continue;
+		}
+		if (strcmp(line, "help")==0) {
 			printf("\rAvailable commands:\n");
 #ifdef EMUL
 			printf("\n");
@@ -128,8 +135,16 @@ runcmdlist(struct command_table *ct, char *prompt, int allowexit, char *l)
 				printf("%15s: %s\n", c->name, c->info);
 			}
 		} else {
-			savedline = strdup(line); // this is freed when rm'd from history..
+			// savedline is freed when rm'd from history..
+			if (subname) {
+				savedline = malloc(strlen(subname)
+								   +strlen(line) + 10);
+				sprintf(savedline, "%s %s", subname, line);
+			} else {
+				savedline = strdup(line);
+			}
 			savedline[strcspn(savedline, "\r\n")] = 0;	// remove trailing \n
+
 			argc = buildargs(line, argv);
 			free(line);
 			if (argc < 0) {
@@ -138,7 +153,10 @@ runcmdlist(struct command_table *ct, char *prompt, int allowexit, char *l)
 				for (c = ct; c->func; c++) {
 					// printf("testing %s against %s\n", argv[0], c->name);
 					if (strncmp(argv[0], c->name, 2) == 0) {
-						add2hist(savedline);
+						if (rval != GLHIST)
+							add2hist(savedline);
+						else
+							free(savedline);
 						// not exactly sure why......
 						printf("\r");
 						(*c->func)(argc, argv);
@@ -211,7 +229,7 @@ main()
 	start_smp_udp();
 #endif
 
-	runcmdlist(cmd_tab, PROMPT, 0, NULL);	// 0, 0 means never exit, no args
+	runcmdlist(cmd_tab, NULL, PROMPT, 0, NULL);	// 0, 0 means never exit, no args
 	/*
 	 * Never returns
 	 */

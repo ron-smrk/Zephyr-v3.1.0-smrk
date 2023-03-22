@@ -35,5 +35,6 @@ extern int puts(const char *);
 #define GLSTR		0x1
 #define GLESCODE	0x2
 #define GLEOF		0x3	// empty line...
+#define GLHIST		0x4 // history command
 #define GLERR		-1
 
