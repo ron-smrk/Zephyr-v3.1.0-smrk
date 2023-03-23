@@ -39,6 +39,8 @@ extern int led_cmd(int, char **);
 extern int hist_cmd(int, char **);
 extern int kern_cmd(int, char **);
 extern int reboot_cmd(int, char **);
+extern int sleep_cmd(int, char **);
+extern int echo_cmd(int, char **);
 extern int vers_cmd(int, char **);
 
 extern void add2hist(char *);

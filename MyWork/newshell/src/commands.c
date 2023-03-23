@@ -1,6 +1,7 @@
 #include "shell.h"
 #ifndef EMUL
 #include <zephyr/sys/reboot.h>
+#include <sys_clock.h>
 #endif
 
 int uptime_cmd(int argc, char **argv)
@@ -40,6 +41,41 @@ static struct command_table kern_tab[] = {
 	{"cycles", cycles_cmd, "HW cycles"},
 	{0}
 };
+
+int
+echo_cmd(int argc, char **argv)
+{
+	int i;
+	for ( i = 1; i < argc; i++) {
+		printf("%s ", argv[i]);
+	}
+	printf("\n");
+	return 0;
+}
+int
+sleep_cmd(int argc, char **argv)
+{
+	int sval;
+#if 0
+	int i;
+	printf("run sleep cmd...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+#endif
+	if (argc != 2) {
+		printf("sleep [NSEC].\n");fflush(stdout);
+		return -1;
+	}
+
+	sval = atoi(argv[1]);
+#ifdef EMUL
+	printf("Sleeping for %d seconds\n", sval);
+#else
+	k_sleep(K_MSEC(sval*1000));
+#endif
+	return 0;
+}
 
 int
 kern_cmd(int argc, char **argv)

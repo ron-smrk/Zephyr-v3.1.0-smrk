@@ -44,6 +44,8 @@ struct command_table cmd_tab[] = {
 	{"led", led_cmd, "LED Commands"},
 	{"pmbus", pmbus_cmd, "Power Management commands."},
 	{"kernel", kern_cmd, "Kernel Commands."},
+	{"sleep", sleep_cmd, "Delay (seconds)."},
+	{"echo", echo_cmd, "echo args."},
 	{"version", vers_cmd, "Show Software Version."},
 	{0}
 };

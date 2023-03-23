@@ -139,8 +139,6 @@ zgetline(char **ptr, char *prompt)
 				rval = GLERR;
 			}
 			if (line[0] == PREVH) {
-				//free(line);
-				//line = strdup(prevhist());
 				int tlen;
 				char *p = prevhist();
 				if (!p) {
@@ -156,14 +154,13 @@ zgetline(char **ptr, char *prompt)
 				rval = GLHIST;
 					  
 			} else if (line[0] == NEXTH) {
-				//free(line);
-				//line = strdup(nexthist());
 				int tlen;
 				char *p = nexthist();
 				if (!p) {
 					continue;
 				}
 				strcpy(linep, p);
+				tlen = strlen(linep);
 				line = linep+tlen;
 				len = lenmax - tlen;
 				printf("                                \r");
