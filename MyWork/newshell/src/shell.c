@@ -35,7 +35,6 @@ static struct fs_mount_t littlefs_mnt = {
 #endif
 
 #define PROMPT "# "
-#define MAXARGS	20
 #define WHITESPACE " \t\n"
 
 struct command_table cmd_tab[] = {
@@ -47,6 +46,7 @@ struct command_table cmd_tab[] = {
 	{"sleep", sleep_cmd, "Delay (seconds)."},
 	{"echo", echo_cmd, "echo args."},
 	{"version", vers_cmd, "Show Software Version."},
+	{"loop", loop_cmd, "Repeat commands"},
 	{0}
 };
 
@@ -80,31 +80,34 @@ buildargs(char *p, char **argv)
 }
 
 /*
- * Run 1 command is l points to a command string, else loop until empty string
+ * Run 1 command if l points to a command string, else loop until empty string
  * (unless allowexit is 0
  */
 int
-runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit, char *l)
+runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit, char *inputline)
 {
 	char *line;
 	int argc;
+
 	char *argv[MAXARGS];
 	int i;
 	int rval;
 	struct command_table	*c;
 
+	//printf("\nruncmd: subname: %s, prompt: %s, allowexit=%d, inputline: %s\n",
+	//	   subname, prompt, allowexit, inputline);fflush(stdout);
 	while (1) {
 		char *savedline;
 		int match = 0;
 
-		if (!l) {
+		if (!inputline) {
 			puts(prompt);
 			fflush(stdout);
 		}
 
 		// if line passed in, use it, otherwise read it in
-		if (l) {
-			line = strdup(l);
+		if (inputline) {
+			line = strdup(inputline);
 			// printf("dup new str is %s\n", line);
 			rval = GLSTR;
 
@@ -128,6 +131,14 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 			}
 			continue;
 		}
+		// Look for a label
+		i = strlen(line);
+		if ( (i >= 2) && (line[i-1] == ':') ) {
+			//printf("add2: (label)\n");
+			add2hist(line);
+			continue;
+		}
+		
 		if (strcmp(line, "help")==0) {
 			printf("\rAvailable commands:\n");
 #ifdef EMUL
@@ -138,6 +149,8 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 				printf("%15s: %s\n", c->name, c->info);
 			}
 		} else {
+			// printf("processing %s, subname=%s inputline=%s\n",
+			//        line, subname, inputline);
 			// savedline is freed when rm'd from history..
 			if (subname) {
 				savedline = malloc(strlen(subname)
@@ -149,6 +162,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 			savedline[strcspn(savedline, "\r\n")] = 0;	// remove trailing \n
 
 			argc = buildargs(line, argv);
+			
 			free(line);
 			if (argc < 0) {
 				printf("Input error!\n");
@@ -156,8 +170,10 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 				for (c = ct; c->func; c++) {
 					// printf("testing %s against %s\n", argv[0], c->name);
 					if (strncmp(argv[0], c->name, 2) == 0) {
-						if (rval != GLHIST)
+						if ((!inputline) && (rval != GLHIST)) {
+							// printf("add2: command: %s\n", savedline);
 							add2hist(savedline);
+						}
 						else
 							free(savedline);
 						// not exactly sure why......
@@ -165,7 +181,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 						(*c->func)(argc, argv);
 						resethist();
 						match = 1;
-						if (l)
+						if (inputline)
 							return 1;
 						break;
 					}
@@ -181,7 +197,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 			// Now cleanup
 			for ( i = 0; i < argc; i++)
 				free(argv[i]);
-			if (!match && l)
+			if (!match && inputline)
 				return 1;
 		}
 	}

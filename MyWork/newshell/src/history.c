@@ -9,7 +9,18 @@ void
 add2hist(char *l)
 {
 	int i;
-	
+#if 0
+	printf("\nadd2hist: %s:\n", l);
+	printf("caller name %pS\n", __builtin_return_address(0));
+	{
+		for (i=0; i < NHIST; i++) {
+			if (hist_tab[i].cmd == NULL)
+				printf("%d: %d: NULL\n", i, hist_tab[i].hnum);
+			else
+				printf("%d: %d: %s\n", i, hist_tab[i].hnum, hist_tab[i].cmd);
+		}
+	}
+#endif
 	if (hist_tab[0].cmd) {
 		// printf("Freeing (%s) %p\n", hist_tab[0].cmd, hist_tab[0].cmd);
 		free(hist_tab[0].cmd);
@@ -21,6 +32,36 @@ add2hist(char *l)
 	hist_tab[NHIST-1].cmd = l;
 	hist_tab[NHIST-1].hnum = ++hnum;
 	currhist = NHIST-1;
+#if 0
+	{
+		printf("Added %d: %s in slot %d\n", hist_tab[NHIST-1].hnum, l, NHIST-1);
+	}
+#endif
+}
+
+/*
+ * look for label in history, return offset if present, else -1
+ */
+int
+hist_getlabel(char *s)
+{
+	int i;
+	int tlen;
+	char *tmp;
+	
+	for (i = 0; i < (NHIST-1); i++) {
+		tmp = hist_tab[i].cmd;
+		if (tmp) {
+			tlen = strlen(tmp);
+			//printf("tmp=%s, len:%d\n", tmp, tlen);
+			if (strncmp(tmp, s, tlen-1) == 0) {
+				if (tmp[tlen-1] == ':') {
+					return i;
+				}
+			} 
+		}
+	}
+	return -1;
 }
 
 int
