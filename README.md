@@ -15,17 +15,23 @@ west zephyr-export
 pip3 install --user -r zephyr/scripts/requirements.txt
 ```
 
-# add git hook to update version at checkin time.
+### add git hook to update version at checkin time.
+```bash
 cp SMRKConfig/pre-commit .git/hooks
 cp SMRKConfig/pre-push .git/hooks
 # make sure they are executable.
+```
 
-Setup:
-# get mcumgr command
+##Setup:
+### get mcumgr command
+```bash
 go get github.com/apache/mynewt-mcumgr-cli/mcumgr
+```
 
-# setup comms port for mucmgr
+## setup comms port for mucmgr
+```bash
 mcumgr conn add usb2  type="serial" connstring="dev=/dev/ttyUSB2,baud=115200,mtu=512"
+```
 
 Setup Toolchain
 cd ~
