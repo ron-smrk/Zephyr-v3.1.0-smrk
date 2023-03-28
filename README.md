@@ -33,7 +33,8 @@ go get github.com/apache/mynewt-mcumgr-cli/mcumgr
 mcumgr conn add usb2  type="serial" connstring="dev=/dev/ttyUSB2,baud=115200,mtu=512"
 ```
 
-Setup Toolchain
+## Setup Toolchain
+```bash
 cd ~
 wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/zephyr-sdk-0.14.2_linux-x86_64.tar.gz
 wget -O - https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.14.2/sha256.sum | shasum --check --ignore-missing
@@ -43,6 +44,8 @@ cd /opt/zephyr-sdk-0.14.2
 ./setup.sh
 sudo cp ~/zephyr-sdk-0.14.2/sysroots/x86_64-pokysdk-linux/usr/share/openocd/contrib/60-openocd.rules /etc/udev/rules.d
 sudo udevadm control --reload
+```
+
 
 _______________MCUBOOT______________
 
