@@ -47,18 +47,17 @@ sudo udevadm control --reload
 ```
 
 
-_______________MCUBOOT______________
+## MCUBOOT
+```bash
 
-
-10/19
-From: /exports/share2/RonWork/Xilinx/STM/ZEPHYR-3.1
+From directory: /exports/share2/RonWork/Xilinx/STM/ZEPHYR-3.1
 ln -s Zephyr-v3.1.0-smrk zephyr
 
 1) Build MCUBOOT
-#####building with new key
-#In ZEPHYR-3.1/bootloader/mcuboot:
+**building with new key**
+**In ZEPHYR-3.1/bootloader/mcuboot:**
 ./scripts/imgtool.py  keygen -k smrk-key.pem -t rsa-2048
-## NOTE: key has been created once, dont do this step anymore,
+NOTE: key has been created once, dont do this step anymore,
 ## instead cp smrk-key.pem from zephyr/smrk-key.pem to bootloader/mcuboot,
 ## but menuconfig does need to be done
 cp zephyr/smrk-key.pem bootloader/mcuboot/
@@ -69,7 +68,7 @@ search (/) for BOOT_SIGNATURE_KEY_FILE, change to 'smrk-key.pem'
 - in ZEPHYR-3.1 (up one from main zephy directory)
 west build -b smrk100g -s bootloader/mcuboot/boot/zephyr -d build-mcuboot
 west flash -d build-mcuboot
-
+```
 
 2) Build Initial App
 cd zephyr
