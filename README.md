@@ -92,8 +92,8 @@ mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb
 ```bash
 ./SMRK-Release/Package.sh 
  - used to create initial flash image. flashes in bootloader and app
- ./SMRK-Release/Build.sh -r
-  - Buids latest app, and packages it along with mcumgr binary and instructions for updating
+./SMRK-Release/Build.sh -r
+ - Buids latest app, and packages it along with mcumgr binary and instructions for updating
 ```
 
 ### OLD Misc commands:
