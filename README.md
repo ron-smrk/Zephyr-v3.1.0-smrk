@@ -71,13 +71,13 @@ west flash -d build-mcuboot
 
 2) Build Initial App
 cd zephyr
-west build -b smrk100g MyWork/smp_svr
+west build -b smrk100g MyWork/newshell
 west sign -t imgtool -- --key ../bootloader/mcuboot/smrk-key.pem 
 west flash --hex-file build/zephyr/zephyr.signed.hex
 
 3) Build updated App
    
-west build -d build2 -b smrk100g -s MyWork/smp_svr
+west build -d build2 -b smrk100g -s MyWork/newshell
 ../bootloader/mcuboot/scripts/imgtool.py sign --key ../bootloader/mcuboot/smrk-key.pem --header-size=0x200 --align 8  --version 1.3 --slot-size 0x20000 --pad build2/zephyr/zephyr.bin signed-new.bin
 
 4) uploading:
@@ -88,6 +88,12 @@ mcumgr -c usb2 image test 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987
 mcumgr -c usb2 reset
 mcumgr -c usb2 image list
 mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
+```
+```bash
+./SMRK-Release/Package.sh 
+ - used to create initial flash image. flashes in bootloader and app
+ ./SMRK-Release/Build.sh -r
+  - Buids latest app, and packages it along with mcumgr binary and instructions for updating
 ```
 
 ### OLD Misc commands:
