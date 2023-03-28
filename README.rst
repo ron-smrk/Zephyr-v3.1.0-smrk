@@ -2,7 +2,9 @@
 https://docs.zephyrproject.org/latest/develop/getting_started/index.html
 
 
-Create zephyr tree from git:
+### Create zephyr tree from git
+
+```bash
 
 mkdir Zephy
 cd Zephy
@@ -11,6 +13,7 @@ west init -l Zephyr-v3.1.0-smrk
 west update
 west zephyr-export
 pip3 install --user -r zephyr/scripts/requirements.txt
+```
 
 # add git hook to update version at checkin time.
 cp SMRKConfig/pre-commit .git/hooks
