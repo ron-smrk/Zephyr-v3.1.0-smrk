@@ -79,7 +79,7 @@ mcumgr -c usb2 reset
 mcumgr -c usb2 image list
 mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
 
-<s>
+<em>
 OLD Misc commands:
 west build -d build2 -b smrk100g -s MyWork/shell_module/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
 ../bootloader/mcuboot/scripts/imgtool.py sign --key ../bootloader/mcuboot/root-rsa-2048.pem --header-size=0x200 --align 8  --version 1.3 --slot-size 0x20000 --pad build2/zephyr/zephyr.bin signed-new.bin
@@ -108,7 +108,7 @@ west sign -t imgtool -- --key smrk-key.pem
 west flash --bin-file build/zephyr/zephyr.signed.bin
 
 ---
-</s>
+</em>
 _____________
 JTAG Info
 
