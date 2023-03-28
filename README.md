@@ -68,7 +68,6 @@ search (/) for BOOT_SIGNATURE_KEY_FILE, change to 'smrk-key.pem'
 - in ZEPHYR-3.1 (up one from main zephy directory)
 west build -b smrk100g -s bootloader/mcuboot/boot/zephyr -d build-mcuboot
 west flash -d build-mcuboot
-```
 
 2) Build Initial App
 cd zephyr
@@ -89,9 +88,13 @@ mcumgr -c usb2 image test 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987
 mcumgr -c usb2 reset
 mcumgr -c usb2 image list
 mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb987bb1c2197bb
+```
+
+### OLD Misc commands:
 
 <s>
-OLD Misc commands:
+### OLD Misc commands:
+
 west build -d build2 -b smrk100g -s MyWork/shell_module/  -- -DCONFIG_BOOTLOADER_MCUBOOT=y
 ../bootloader/mcuboot/scripts/imgtool.py sign --key ../bootloader/mcuboot/root-rsa-2048.pem --header-size=0x200 --align 8  --version 1.3 --slot-size 0x20000 --pad build2/zephyr/zephyr.bin signed-new.bin
 
@@ -121,6 +124,7 @@ west flash --bin-file build/zephyr/zephyr.signed.bin
 ---
 </s>
 
+```bash
 _____________
 JTAG Info
 
@@ -186,3 +190,5 @@ Init FTD
  ./ftx_prog --dump  --ignore-crc-error	# write it
 /exports/share2/RonWork/Xilinx/tools/Vivado_Lab/2022.1/Vivado_Lab/2022.1/bin
 -> ./program_ftdi -write   -ftdi FT4232H -vendor "SMRK Labs" -b "smrk100g"  -d "100G" -serial 0abc02
+
+```
