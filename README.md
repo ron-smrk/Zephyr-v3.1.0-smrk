@@ -95,6 +95,16 @@ mcumgr -c usb2 image confirm 1c4f902ab37ce912f6986a0db5615a4738835ed99766a8f1bdb
 ./SMRK-Release/Build.sh -r
  - Buids latest app, and packages it along with mcumgr binary and instructions for updating
 ```
+## FTDI serialize
+```bash
+- add/change serial number
+progftdi -s SMRK-99999
+- display serial
+ftx_prog --dump --verbose --ignore-crc-error
+```
+
+
+
 
 ### OLD Misc commands:
 
