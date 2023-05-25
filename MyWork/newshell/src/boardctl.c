@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <sys/byteorder.h>
 #include <drivers/gpio.h>
+#include "shell.h"
 
 
 #include "lib.h"
@@ -162,7 +163,7 @@ start_cpu()
 	set_vrails(POWER_ON, 0, 0);
 
 	int delay = 11;
-	printk("Delay %d mSec\n", delay);
+	//printk("Delay %d mSec\n", delay);
 	k_sleep(K_MSEC(delay));
 
 	gpio_pin_set_dt(&zynq_por, 0);
@@ -189,7 +190,7 @@ set_ps_bit(int line, int val)
 		gpio_pin_set_dt(&zynq_prog, val);
 		break;
 	default:
-		printk("bad line...\n");
+		printf("bad line...\n");
 	}
 }
 
@@ -201,6 +202,145 @@ int get_ps_stat(int line)
 	case GET_INIT:
 		return gpio_pin_get_dt(&zynq_init);
 	}
-	printk("OOPS!!!\n");
+	printf("OOPS!!!\n");
 	return 0xdeadbeef;
+}
+
+
+struct pin {
+	char *name;		/* name */
+	int cval;		/* current value */
+	int	func;		/* SET_POR, etc */
+};
+struct pin pintab[] = {
+	{"srst", 0, SET_SRST},
+	{"por", 0, SET_POR},
+	{"prog", 0, SET_PROG},
+	{"all", 0, SET_ALL},
+	{NULL, 0, 0}
+};
+
+int
+io_set(int argc, char **argv)
+{
+	int i;
+	if (argc == 1) {
+		printf("\n");
+		for (i = 0; pintab[i].func != SET_ALL; i++)
+			printf("%s: %d\n", pintab[i].name, pintab[i].cval);
+		return 0;
+	}
+
+	if (argc != 3) {
+		printf("usage set <LINE> <VALUE>\n");
+		return -1;
+	}
+	char *line = toLower(argv[1]);
+	int val = atoi(argv[2]);
+
+	if ((val < 0) || (val > 1)) {
+		printf("val must be 1 or 0\n");
+		return -1;
+	}
+
+	int match = 0;
+	for (i = 0; pintab[i].name; i++) {
+		if (strcmp(line, pintab[i].name) == 0) {
+			set_ps_bit(pintab[i].func, val);
+			if (pintab[i].func == SET_ALL) {
+				int i2;
+				for (i2 = 0; pintab[i2].func != SET_ALL; i2++) {
+					pintab[i2].cval = val;
+				}
+			} else {
+				pintab[i].cval = val;
+			}
+			match++;
+		}
+	}
+	if (match)
+		return 0;
+
+	printf("line must one of: ");
+	for (i = 0; pintab[i].name; i++) {
+		printf("%s ", pintab[i].name);
+	}
+	printf("\n");
+	return -1;
+}
+
+struct pin status[] = {
+	{"done_b", 0, GET_DONE_B},
+	{"init", 0, GET_INIT},
+	{NULL, 0, 0}
+};
+
+int
+io_get(int argc, char **argv)
+{
+	int i;
+
+	if (argc == 1) {
+		printf("\n");
+		for (i = 0; status[i].name; i++)
+			printf("%s: %d\n", status[i].name, get_ps_stat(status[i].func));
+		return 0;
+	}
+	if (argc != 2) {
+		printf("usage get <LINE>\n");
+		return -1;
+	}
+
+	char *line = toLower(argv[1]);
+	int match = 0;
+	for (i = 0; status[i].name; i++) {
+		if (strcmp(line, status[i].name) == 0) {
+			printf("\n%s: %d\n", status[i].name, get_ps_stat(status[i].func));
+			match++;
+		}
+	}
+	if (match)
+		return 0;
+	printf("line must be one of: " );
+	for (i = 0; status[i].name; i++) {
+		printf("%s ", status[i].name);
+	}
+	printf("\n");
+	return -1;
+}
+
+
+static struct command_table io_tab[] = {
+	{"get", io_get, "read IO pin values"},
+	{"set", io_set, "set IO pin values"},
+	{0}
+};
+
+int
+io_cmd(int argc, char **argv)
+{
+	int i;
+	char *p = NULL;
+
+#if 0
+	printf("running IO submenu...argc = %d\n", argc);
+	for ( i = 0; i < argc; i++) {
+		printf("arg[%d]: %s\n", i, argv[i]);
+	}
+#endif
+	if (argc > 1) {
+		p = malloc(256);
+		*p = '\0';
+		for (i = 1; i < argc; i++) {
+			strcat(p, argv[i]);
+			strcat(p, " ");
+		}
+	} else {
+	}
+	runcmdlist(io_tab, "io", "IO> ", 1, p);
+	if (p)
+		free(p);
+
+	//printf("Back...\n");
+	return 0;
 }

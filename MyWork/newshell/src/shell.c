@@ -47,6 +47,7 @@ struct command_table cmd_tab[] = {
 	{"echo", echo_cmd, "echo args."},
 	{"version", vers_cmd, "Show Software Version."},
 	{"loop", loop_cmd, "Repeat commands"},
+	{"io", io_cmd, "(GP)IO commands"},
 	{0}
 };
 
@@ -169,7 +170,7 @@ runcmdlist(struct command_table *ct, char *subname, char *prompt, int allowexit,
 			} else if (argc > 0) {
 				for (c = ct; c->func; c++) {
 					// printf("testing %s against %s\n", argv[0], c->name);
-					if (strncmp(argv[0], c->name, 2) == 0) {
+					if (strncmp(argv[0], c->name, 3) == 0) {
 						if ((!inputline) && (rval != GLHIST)) {
 							// printf("add2: command: %s\n", savedline);
 							add2hist(savedline);

@@ -45,6 +45,7 @@ extern int sleep_cmd(int, char **);
 extern int echo_cmd(int, char **);
 extern int loop_cmd(int, char **);
 extern int vers_cmd(int, char **);
+extern int io_cmd(int, char **);
 extern int buildargs(char *, char **);
 
 extern void add2hist(char *);
