@@ -111,7 +111,7 @@
 			label = "PG0r85";
 		};
 		EN_1R2_DDR: en_1r2_ddr {
-			gpios = <&gpioa 9 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			gpios = <&gpioa 9 GPIO_ACTIVE_HIGH>;
 			label = "En1r2_ddr";
 		};
 		PG_1R2_DDR: pg_1r2_ddr {
