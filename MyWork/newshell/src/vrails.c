@@ -18,9 +18,8 @@ struct VoltRails vrail[] = {
 		vrail_pg,
 		pmbus_get_volt,
 		irps_reg},
-	// VDD_3R3 has no power good signal yet!
 	// VDD_3R3 derived from pci3_3r3, so no i2c bus...
-	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_RD, -1,
+	[VDD_3R3] = {NULL, NULL, "3R3", 3.3, GPIO_EN|GPIO_PG|GPIO_RD, -1,
 		gpio_vrail_pwr, 
 		vrail_wait_pg,
 		vrail_pg,

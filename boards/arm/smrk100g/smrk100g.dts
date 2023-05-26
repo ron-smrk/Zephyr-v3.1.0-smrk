@@ -128,7 +128,7 @@
 		};
 
 		EN_1R2_MGT: en_1r2_mgt {
-			gpios = <&gpioa 11 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			gpios = <&gpioa 11 GPIO_ACTIVE_HIGH>;
 			label = "En1r2_mgt";
 		};
 		PG_1R2_MGT: pg_1r2_mgt {
@@ -156,12 +156,15 @@
 			label = "PG1r0";
 		};
 
-
 		EN_3R3: en_3r3 {
-			gpios = <&gpioa 12 (GPIO_ACTIVE_HIGH | GPIO_PUSH_PULL | GPIO_PULL_DOWN)>;
+			gpios = <&gpioa 12 GPIO_ACTIVE_HIGH>;
 			label = "En3r3";
 		};
 
+		PG_3R3: pg_3r3 {
+			gpios = <&gpioc 12 GPIO_ACTIVE_HIGH>;
+			label = "PG3r3";
+		};
 	};
 
 	cpu_control {
@@ -206,6 +209,7 @@
 		pwm-led3 = &blue_pwm_led;
 		rstmux = &RstMux;
 		en-3r3 = &EN_3R3;
+		pg-3r3 = &PG_3R3;
 		en-0r85 = &EN_0R85;
 		pg-0r85 = &PG_0R85;
 		en-1r2-ddr = &EN_1R2_DDR;

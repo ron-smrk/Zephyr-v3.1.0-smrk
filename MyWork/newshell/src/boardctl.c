@@ -23,7 +23,9 @@ static const struct gpio_dt_spec pg_1r8 = GPIO_DT_SPEC_GET_OR(PG_1R8_NODE, gpios
 
 #define EN_3R3_NODE	DT_ALIAS(en_3r3)
 static const struct gpio_dt_spec en_3r3 = GPIO_DT_SPEC_GET(EN_3R3_NODE, gpios);
-// Need PG_VDD_3R3
+#define PG_3R3_NODE DT_ALIAS(pg_3r3)
+static const struct gpio_dt_spec pg_3r3 = GPIO_DT_SPEC_GET_OR(PG_3R3_NODE, gpios, {0});
+
 
 #define EN_1R2_DDR_NODE DT_ALIAS(en_1r2_ddr)
 static const struct gpio_dt_spec en_1r2_ddr = GPIO_DT_SPEC_GET_OR(EN_1R2_DDR_NODE, gpios, {0});
@@ -103,10 +105,10 @@ setup_dev(int func)
 		vrail[VDD_1R8].isgood_node = &pg_1r8;
 
 		gpio_pin_configure_dt(&en_3r3, GPIO_OUTPUT);
+		gpio_pin_configure_dt(&pg_3r3, GPIO_INPUT);
 		vrail[VDD_3R3].enable_node = &en_3r3;
+		vrail[VDD_3R3].isgood_node = &pg_3r3;
 		
-		// Need pg_3r3....
-
 		gpio_pin_configure_dt(&en_1r2_ddr, GPIO_OUTPUT);
 		gpio_pin_configure_dt(&pg_1r2_ddr, GPIO_INPUT);
 		vrail[VDD_1R2_DDR].enable_node = &en_1r2_ddr;
