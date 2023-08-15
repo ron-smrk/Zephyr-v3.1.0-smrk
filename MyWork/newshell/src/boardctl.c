@@ -178,6 +178,10 @@ start_cpu()
 	gpio_pin_set_dt(&zynq_por, 0);
 	//printk("setting por=0\n");
 	printf("\nafter POR=0, done_b: %d\n", get_ps_stat(GET_DONE_B));
+
+	printf("set to 0\n");
+	set_ps_bit(SET_FPGA_PSD, 0);
+
 #if 0
 	printf("set to 0\n");
 	set_ps_bit(SET_FPGA_PSD, 0);
