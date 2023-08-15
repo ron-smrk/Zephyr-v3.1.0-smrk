@@ -34,15 +34,17 @@ extern int i2c_read_bytes(int, int, char *, int);
 #define FALSE	(1==0)
 
 #define VOLT_ON		1
-#define  VOLT_OFF	0
+#define VOLT_OFF	0
 
-#define SET_ALL		-1
-#define SET_POR		0
-#define SET_SRST	1
-#define SET_PROG	2
+#define SET_ALL			-1
+#define SET_POR			0
+#define SET_SRST		1
+#define SET_PROG		2
+#define SET_FPGA_PSD	3
 
-#define GET_DONE_B	0
-#define GET_INIT	1
+#define GET_DONE_B		0
+#define GET_INIT		1
+#define GET_FPGA_PSD	2
 
 #define ENOENT		2
 extern void set_ps_bit(int, int);

@@ -67,10 +67,8 @@ static const struct gpio_dt_spec zynq_prog = GPIO_DT_SPEC_GET(ZYNQ_PS_PROG_NODE,
 __attribute__ ((unused))
 static const struct gpio_dt_spec qsfp_reset = GPIO_DT_SPEC_GET(QSFP_RESETL_NODE, gpios);
 
-#define QSFP_LPMODE_NODE DT_ALIAS(qsfp_lpmode)
-// Remove when used
-__attribute__ ((unused))
-static const struct gpio_dt_spec qsfp_lowpower_mode = GPIO_DT_SPEC_GET(QSFP_LPMODE_NODE, gpios);
+#define FPGA_PS_DONE_NODE DT_ALIAS(fpga_ps_done)
+static const struct gpio_dt_spec fpga_ps_done = GPIO_DT_SPEC_GET(FPGA_PS_DONE_NODE, gpios);
 
 #define ZYNQ_PS_INIT_NODE DT_ALIAS(zynq_ps_init)
 static const struct gpio_dt_spec zynq_init = GPIO_DT_SPEC_GET(ZYNQ_PS_INIT_NODE, gpios);
@@ -137,7 +135,7 @@ setup_dev(int func)
 		gpio_pin_configure_dt(&zynq_srst, GPIO_OUTPUT);
 		gpio_pin_configure_dt(&zynq_por, GPIO_OUTPUT);
 		gpio_pin_configure_dt(&zynq_prog, GPIO_OUTPUT);
-		gpio_pin_configure_dt(&qsfp_lowpower_mode, GPIO_OUTPUT);
+		gpio_pin_configure_dt(&fpga_ps_done, GPIO_OUTPUT);
 
 		gpio_pin_configure_dt(&zynq_init, GPIO_INPUT);
 		gpio_pin_configure_dt(&zynq_done_b, GPIO_INPUT);
@@ -160,21 +158,50 @@ setup_dev(int func)
 void
 start_cpu()
 {
+	//printf("done_b: %d\n", get_ps_stat(GET_DONE_B));
 	gpio_pin_set_dt(&zynq_prog, 0);
+	//printf("done_b: %d\n", get_ps_stat(GET_DONE_B));
 	gpio_pin_set_dt(&zynq_srst, 0);
+	//printf("done_b: %d\n", get_ps_stat(GET_DONE_B));
 	gpio_pin_set_dt(&zynq_por, 1);
 	//printk("setting prog=0, stst=0, por=1\n");
 
+	printf("\npre power: done_b: %d\n", get_ps_stat(GET_DONE_B));
 	set_vrails(POWER_ON, 0, 0);
+	printf("\npost power done_b: %d\n", get_ps_stat(GET_DONE_B));
 
 	int delay = 11;
 	//printk("Delay %d mSec\n", delay);
 	k_sleep(K_MSEC(delay));
 
+	//printf("done_b: %d\n", get_ps_stat(GET_DONE_B));
 	gpio_pin_set_dt(&zynq_por, 0);
 	//printk("setting por=0\n");
-
+	printf("\nafter POR=0, done_b: %d\n", get_ps_stat(GET_DONE_B));
+#if 0
+	printf("set to 0\n");
+	set_ps_bit(SET_FPGA_PSD, 0);
+	printf("read back %d\n", get_ps_stat(GET_FPGA_PSD));
+	
+	printf("set to 1\n");
+	set_ps_bit(SET_FPGA_PSD, 1);
+	printf("read back %d\n", get_ps_stat(GET_FPGA_PSD));
+#endif
 }
+
+struct pin {
+	char *name;		/* name */
+	int cval;		/* current value */
+	int	func;		/* SET_POR, etc */
+};
+struct pin pintab[] = {
+	{"srst", 0, SET_SRST},
+	{"por", 0, SET_POR},
+	{"prog", 0, SET_PROG},
+	{"fpga_psd", 0, SET_FPGA_PSD},
+	{"all", 0, SET_ALL},
+	{NULL, 0, 0}
+};
 
 void
 set_ps_bit(int line, int val)
@@ -189,13 +216,27 @@ set_ps_bit(int line, int val)
 	case SET_PROG:
 		gpio_pin_set_dt(&zynq_prog, val);
 		break;
+	case SET_FPGA_PSD:
+		printf("\nset fpga to %d\n", val);
+		gpio_pin_set_dt(&fpga_ps_done, val);
+		break;
 	case SET_ALL:
 		gpio_pin_set_dt(&zynq_srst, val);
 		gpio_pin_set_dt(&zynq_por, val);
 		gpio_pin_set_dt(&zynq_prog, val);
+		gpio_pin_set_dt(&fpga_ps_done, val);
 		break;
 	default:
 		printf("bad line...\n");
+		return;
+	}
+	if (line == SET_ALL) {
+		int i2;
+		for (i2 = 0; pintab[i2].func != SET_ALL; i2++) {
+			pintab[i2].cval = val;
+		}
+	} else {
+		pintab[line].cval = val;
 	}
 }
 
@@ -206,24 +247,12 @@ int get_ps_stat(int line)
 		return gpio_pin_get_dt(&zynq_done_b);
 	case GET_INIT:
 		return gpio_pin_get_dt(&zynq_init);
+	case GET_FPGA_PSD:
+		return pintab[SET_FPGA_PSD].cval;
 	}
 	printf("OOPS!!!\n");
 	return 0xdeadbeef;
 }
-
-
-struct pin {
-	char *name;		/* name */
-	int cval;		/* current value */
-	int	func;		/* SET_POR, etc */
-};
-struct pin pintab[] = {
-	{"srst", 0, SET_SRST},
-	{"por", 0, SET_POR},
-	{"prog", 0, SET_PROG},
-	{"all", 0, SET_ALL},
-	{NULL, 0, 0}
-};
 
 int
 io_set(int argc, char **argv)
@@ -252,6 +281,7 @@ io_set(int argc, char **argv)
 	for (i = 0; pintab[i].name; i++) {
 		if (strcmp(line, pintab[i].name) == 0) {
 			set_ps_bit(pintab[i].func, val);
+#if 0			
 			if (pintab[i].func == SET_ALL) {
 				int i2;
 				for (i2 = 0; pintab[i2].func != SET_ALL; i2++) {
@@ -260,6 +290,7 @@ io_set(int argc, char **argv)
 			} else {
 				pintab[i].cval = val;
 			}
+#endif
 			match++;
 		}
 	}
@@ -277,6 +308,7 @@ io_set(int argc, char **argv)
 struct pin status[] = {
 	{"done_b", 0, GET_DONE_B},
 	{"init", 0, GET_INIT},
+	{"fpga_ps_done", 0, GET_FPGA_PSD},
 	{NULL, 0, 0}
 };
 
