@@ -182,7 +182,8 @@ set_vrails(int sense, int sleep, int wait)
 		while (i >= 0) {
 			(*vrail[i].setpwr)(i, VOLT_OFF);
 			if (sleep > 0)
-				k_sleep(K_MSEC(1000*sleep));			else if (wait) {
+				k_sleep(K_MSEC(1000*sleep));
+			else if (wait) {
 				//printk("press key to continue: ");
 				//c=console_getchar();
 				//printk("BACK\n");
